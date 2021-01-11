@@ -8,11 +8,11 @@ import cv2.aruco as aruco
 def maximize_current_window():
 	os.system("""osascript -e 'tell application "System Events" to keystroke "f" using { command down, control down }'""")
 
-def move_to_beamer_monitor(window, maximize=True):
+def move_window_to_monitor(window, monitor_name, maximize=True):
 	monitors = glfw.get_monitors()
 	monitor = monitors[0]
 	for m in monitors:
-		if glfw.get_monitor_name(m) == b"NeoPix":
+		if glfw.get_monitor_name(m) == monitor_name:
 			monitor = m
 	
 	glfw.set_window_pos(window, *glfw.get_monitor_pos(monitor))
@@ -115,7 +115,7 @@ def cv_to_np(m):
 def load_calibration():
 	return np.load("calibration.npz")
 
-def projection_main_loop(render, projection_size):
+def projection_main_loop(render, projection_size, monitor_name=None):
 	if not glfw.init():
 		return
 	
@@ -124,7 +124,8 @@ def projection_main_loop(render, projection_size):
 		glfw.terminate()
 		return
 	
-	move_to_beamer_monitor(window)
+	if monitor_name != None:
+		move_window_to_monitor(window, monitor_name)
 
 	glfw.make_context_current(window)
 	

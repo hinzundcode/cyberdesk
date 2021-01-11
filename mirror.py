@@ -20,4 +20,5 @@ def render(projection_texture, camera_frame):
 	draw_texture(projection_texture, projection_rect)
 
 if __name__ == "__main__":
-	projection_main_loop(render, projection_size)
+	projection_main_loop(render, projection_size,
+		monitor_name=config.monitor_name)
