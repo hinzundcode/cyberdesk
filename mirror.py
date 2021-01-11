@@ -1,7 +1,4 @@
-import glfw
-from OpenGL.GL import *
 from src import *
-import numpy as np
 import cv2 as cv
 import _config as config
 
