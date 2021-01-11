@@ -6,10 +6,6 @@ import time
 
 projection_size = config.projection_size
 projection_rect = rect_corners(size=projection_size)
-
-surface_data = np.empty(shape=projection_size, dtype=np.uint32)
-surface = cairo.ImageSurface.create_for_data(surface_data, cairo.FORMAT_ARGB32, *projection_size)
-
 projection_corners_on_camera = None
 
 def draw_cv_polygon(frame, corners, color=Color.GREEN):
@@ -19,10 +15,13 @@ def draw_cv_polygon(frame, corners, color=Color.GREEN):
 	return frame
 
 def setup():
-	projection_texture = create_texture(projection_size)
+	surface_data = np.empty(shape=projection_size, dtype=np.uint32)
+	surface = cairo.ImageSurface.create_for_data(surface_data, cairo.FORMAT_ARGB32, *projection_size)
+	
 	ctx = cairo.Context(surface)
 	draw_chessboard(ctx, projection_size)
-	update_texture(projection_texture, projection_size, surface_data)
+	
+	projection_texture = create_texture(projection_size, surface_data)
 	
 	start_time = time.time()
 	
