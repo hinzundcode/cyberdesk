@@ -5,9 +5,15 @@ import sys
 import numpy as np
 import cv2 as cv
 import cv2.aruco as aruco
+import platform
 
 def maximize_current_window():
-	os.system("""osascript -e 'tell application "System Events" to keystroke "f" using { command down, control down }'""")
+	system = platform.system()
+	
+	if system == "Darwin":
+		os.system("""osascript -e 'tell application "System Events" to keystroke "f" using { command down, control down }'""")
+	else:
+		print("maximize_current_window() is not implemented for " + system + " yet")
 
 def move_window_to_monitor(window, monitor_name, maximize=True):
 	monitors = glfw.get_monitors()
