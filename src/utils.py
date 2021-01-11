@@ -1,4 +1,5 @@
 import glfw
+from .gl import *
 from .graphics import *
 import os
 import sys
@@ -71,6 +72,11 @@ def projection_main_loop(setup, render, projection_size,
 		glfw.terminate()
 		return
 	
+	def on_key(window, key, scancode, action, mods):
+		if key in [glfw.KEY_Q, glfw.KEY_ESCAPE]:
+			glfw.set_window_should_close(window, True)
+	glfw.set_key_callback(window, on_key)
+	
 	if monitor_name != None:
 		move_window_to_monitor(window, monitor_name, maximize_window)
 
@@ -83,12 +89,15 @@ def projection_main_loop(setup, render, projection_size,
 	cap = get_camera_capture()
 
 	while not glfw.window_should_close(window):
-		camera_frame, camera_frame_gray = get_camera_frame(cap)
-		render(state, camera_frame, camera_frame_gray)
-		
-		glfw.swap_buffers(window)
-		glfw.poll_events()
-
+		try:
+			camera_frame, camera_frame_gray = get_camera_frame(cap)
+			render(state, camera_frame, camera_frame_gray)
+			
+			glfw.swap_buffers(window)
+			glfw.poll_events()
+		except KeyboardInterrupt:
+			glfw.set_window_should_close(window, True)
+	
 	glfw.terminate()
 
 def rect_corners(size, position=(0, 0)):
