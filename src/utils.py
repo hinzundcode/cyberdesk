@@ -7,6 +7,7 @@ import numpy as np
 import cv2 as cv
 import cv2.aruco as aruco
 import platform
+from datetime import datetime
 
 def maximize_current_window():
 	system = platform.system()
@@ -88,6 +89,7 @@ def projection_main_loop(setup, render, projection_size,
 	
 	cap = get_camera_capture()
 
+	took_screenshot = False
 	while not glfw.window_should_close(window):
 		try:
 			camera_frame, camera_frame_gray = get_camera_frame(cap)
@@ -95,6 +97,13 @@ def projection_main_loop(setup, render, projection_size,
 			
 			glfw.swap_buffers(window)
 			glfw.poll_events()
+			
+			if glfw.get_key(window, glfw.KEY_S):
+				if not took_screenshot:
+					save_screenshot(camera_frame)
+					took_screenshot = True
+			else:
+				took_screenshot = False
 		except KeyboardInterrupt:
 			glfw.set_window_should_close(window, True)
 	
@@ -110,3 +119,9 @@ def rect_corners(size, position=(0, 0)):
 		[x+width, y+height],
 		[x, y+height]
 	], dtype="float32")
+
+def save_screenshot(frame):
+	now = datetime.now()
+	filename = "screenshot-{}.jpg".format(now.strftime("%Y%m%d-%H%M%S"))
+	cv.imwrite(filename, frame)
+	print("took a screenshot! "+filename)
