@@ -19,5 +19,5 @@ monitor_name = b"NeoPix"
 
 | Application | Screenshot |
 |-------------|------------|
-| detect-markers.py | <img alt="detect-markers.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/detect-markers.jpg" width="300" /> |
 | paint.py | <img alt="paint.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/paint.png" width="300" /> |
+| detect-markers.py | <img alt="detect-markers.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/detect-markers.jpg" width="300" /> |
