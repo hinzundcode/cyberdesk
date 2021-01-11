@@ -14,3 +14,9 @@ monitor_name = b"NeoPix"
 5. generate and print some markers with (`python generate-markers.py`)
 6. run an example program like `python detect-markers.py`
 7. have fun!
+
+## applications
+
+| Application | Screenshot |
+|-------------|------------|
+| detect-markers.py | ![detect-markers.py screenshot](https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/detect-markers.jpg) |
