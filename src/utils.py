@@ -61,7 +61,8 @@ def load_calibration(file_name="calibration.npz"):
 	
 	return np.load(file_name)
 
-def projection_main_loop(render, projection_size, monitor_name=None):
+def projection_main_loop(setup, render, projection_size,
+	monitor_name=None, maximize_window=True):
 	if not glfw.init():
 		return
 	
@@ -71,19 +72,19 @@ def projection_main_loop(render, projection_size, monitor_name=None):
 		return
 	
 	if monitor_name != None:
-		move_window_to_monitor(window, monitor_name)
+		move_window_to_monitor(window, monitor_name, maximize_window)
 
 	glfw.make_context_current(window)
 	
 	set_orthagonal_camera(projection_size)
 	
-	projection_texture = create_texture(projection_size)
+	state = setup()
 	
 	cap = get_camera_capture()
 
 	while not glfw.window_should_close(window):
 		camera_frame, camera_frame_gray = get_camera_frame(cap)
-		render(projection_texture, camera_frame)
+		render(state, camera_frame, camera_frame_gray)
 		
 		glfw.swap_buffers(window)
 		glfw.poll_events()
