@@ -1,7 +1,7 @@
 ## setup
 
 1. make sure OpenGL, OpenCV and GLFW are installed on your system
-2. install the python requirements with `$ pip install -r requirements.txt`
+2. install the python requirements with `pip install -r requirements.txt`
 3. create a `_config.py` file specifying your setup, for example:
 
 ```python
