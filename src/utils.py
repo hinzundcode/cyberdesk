@@ -1,6 +1,7 @@
 import glfw
 from OpenGL.GL import *
 import os
+import sys
 import numpy as np
 import cv2 as cv
 import cv2.aruco as aruco
@@ -112,8 +113,12 @@ def np_to_cv(m):
 def cv_to_np(m):
 	return m.view("uint32")
 
-def load_calibration():
-	return np.load("calibration.npz")
+def load_calibration(file_name="calibration.npz"):
+	if not os.path.exists(file_name):
+		print('calibration data not found. run "python calibrate.py" first')
+		sys.exit(1)
+	
+	return np.load(file_name)
 
 def projection_main_loop(render, projection_size, monitor_name=None):
 	if not glfw.init():
