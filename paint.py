@@ -4,6 +4,17 @@ import _config as config
 import cairo
 import math
 
+marker_colors = {
+	"0": Color.BLACK,
+	"1": Color.RED,
+	"2": Color.GREEN,
+	"3": Color.BLUE,
+	"4": Color.YELLOW,
+	"5": Color.CYAN,
+	"6": Color.MAGENTA,
+	"7": Color.WHITE,
+}
+
 projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
 camera_size = config.camera_size
 projection_size = config.projection_size
@@ -11,40 +22,26 @@ projection_rect = rect_corners(size=projection_size)
 
 perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
 
-def get_rightmost_corner(corners):
-	corner = corners[0]
-	for c in corners:
-		if c[0] > corner[0]:
-			corner = c
-	return corner
+def get_center(corners):
+	x = [c[0] for c in corners]
+	y = [c[1] for c in corners]
+	return (sum(x) / len(corners), sum(y) / len(corners))
 
 def draw(ctx, marker_corners, marker_ids):
-	ctx.set_source_rgba(0, 0, 0, 1)
-	ctx.rectangle(0, 0, *camera_size)
-	ctx.fill()
-	
 	if marker_ids is not None:
 		for i in range(len(marker_ids)):
-			marker_id = int(marker_ids[i][0])
-			corners = marker_corners[i][0]
+			marker_id = str(marker_ids[i][0])
 			
-			ctx.set_source_rgb(*Color.GREEN)
-			ctx.set_line_width(10)
-			
-			ctx.new_path()
-			for point in corners:
-				ctx.line_to(*point)
-			ctx.close_path()
-			ctx.stroke()
-			
-			ctx.set_source_rgb(*Color.RED)
-			ctx.arc(*corners[0], 5, 0, 2*math.pi)
-			ctx.fill()
-			
-			ctx.set_source_rgb(*Color.GREEN)
-			ctx.set_font_size(20)
-			ctx.move_to(*get_rightmost_corner(corners) + np.array([10, 0]))
-			ctx.show_text(str(marker_id))
+			if marker_id in marker_colors:
+				corners = marker_corners[i][0]
+				
+				radius = 10
+				if marker_id == "0":
+					radius = 30
+				
+				ctx.set_source_rgb(*marker_colors[marker_id])
+				ctx.arc(*get_center(corners), radius, 0, 2*math.pi)
+				ctx.fill()
 
 def setup():
 	projection_texture = create_texture(projection_size)
