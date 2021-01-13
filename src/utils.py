@@ -8,6 +8,7 @@ import cv2 as cv
 import cv2.aruco as aruco
 import platform
 from datetime import datetime
+import time
 
 def maximize_current_window():
 	system = platform.system()
@@ -78,8 +79,12 @@ def projection_main_loop(setup, render, projection_size,
 			glfw.set_window_should_close(window, True)
 	glfw.set_key_callback(window, on_key)
 	
+	window_ready = None
+	
 	if monitor_name != None:
 		move_window_to_monitor(window, monitor_name, maximize_window)
+		if maximize_window:
+			window_ready = time.time() + 2
 
 	glfw.make_context_current(window)
 	
@@ -88,12 +93,16 @@ def projection_main_loop(setup, render, projection_size,
 	state = setup()
 	
 	cap = get_camera_capture()
+	
+	start_time = time.time()
 
 	took_screenshot = False
 	while not glfw.window_should_close(window):
 		try:
-			camera_frame, camera_frame_gray = get_camera_frame(cap)
-			render(state, camera_frame, camera_frame_gray)
+			# wait until window is open and maximized
+			if window_ready == None or time.time() > window_ready:
+				camera_frame, camera_frame_gray = get_camera_frame(cap)
+				render(state, camera_frame, camera_frame_gray)
 			
 			glfw.swap_buffers(window)
 			glfw.poll_events()

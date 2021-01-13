@@ -2,7 +2,6 @@ from src import *
 import cv2 as cv
 import _config as config
 import cairo
-import time
 
 projection_size = config.projection_size
 projection_rect = rect_corners(size=projection_size)
@@ -23,51 +22,46 @@ def setup():
 	
 	projection_texture = create_texture(projection_size, surface_data)
 	
-	start_time = time.time()
-	
-	return projection_texture, start_time
+	return projection_texture
 
-def render(state, camera_frame, camera_frame_gray):
+def render(projection_texture, camera_frame, camera_frame_gray):
 	global projection_corners_on_camera
-	projection_texture, start_time = state
 	
 	draw_texture(projection_texture, projection_rect)
 	
-	# wait until chessboard window is open and maximized
-	if time.time() - start_time > 4:
-		chessboard_size = 6, 13
-		criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+	chessboard_size = 6, 13
+	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+	
+	ret, corners = cv.findChessboardCorners(camera_frame_gray, chessboard_size, None)
+	if ret:
+		corners = cv.cornerSubPix(camera_frame_gray, corners, (11, 11), (-1, -1), criteria)
 		
-		ret, corners = cv.findChessboardCorners(camera_frame_gray, chessboard_size, None)
-		if ret:
-			corners = cv.cornerSubPix(camera_frame_gray, corners, (11, 11), (-1, -1), criteria)
-			
-			chessboard_width, chessboard_height = chessboard_size
-			
-			bl_height = corners[0][0][1] - corners[1][0][1]
-			bl_width = corners[chessboard_width][0][0] - corners[0][0][0]
-			bl = corners[0][0] + np.array([-2*bl_width, 2*bl_height])
-			
-			tl_height = corners[chessboard_width-2][0][1] - corners[chessboard_width-1][0][1]
-			tl_width = corners[2*chessboard_width-1][0][0] - corners[chessboard_width-1][0][0]
-			tl = corners[chessboard_width-1][0] + np.array([-2*tl_width, -2*tl_height])
-			
-			tr_height = corners[chessboard_width*chessboard_height-2][0][1] - corners[chessboard_width*chessboard_height-1][0][1]
-			tr_width = corners[chessboard_width*chessboard_height-1][0][0] - corners[chessboard_width*(chessboard_height-1)-1][0][0]
-			tr = corners[chessboard_width*chessboard_height-1][0] + np.array([2*tl_width, -2*tl_height])
-			
-			br_height = corners[chessboard_width*(chessboard_height-1)][0][1] - corners[chessboard_width*(chessboard_height-1)+1][0][1]
-			br_width = corners[chessboard_width*(chessboard_height-1)][0][0] - corners[chessboard_width*(chessboard_height-2)][0][0]
-			br = corners[chessboard_width*(chessboard_height-1)][0] + np.array([2*tl_width, 2*tl_height])
-			
-			projection_corners_on_camera = np.array([tl, tr, br, bl], dtype="float32")
-			
-			projection_corners_on_camera = cv.cornerSubPix(camera_frame_gray, projection_corners_on_camera, (11, 11), (-1, -1), criteria)
-			
-			camera_frame = draw_cv_polygon(camera_frame, projection_corners_on_camera)
+		chessboard_width, chessboard_height = chessboard_size
 		
-		camera_frame = cv.drawChessboardCorners(camera_frame, chessboard_size, corners, ret)
-		cv.imshow("camera_frame", camera_frame)
+		bl_height = corners[0][0][1] - corners[1][0][1]
+		bl_width = corners[chessboard_width][0][0] - corners[0][0][0]
+		bl = corners[0][0] + np.array([-2*bl_width, 2*bl_height])
+		
+		tl_height = corners[chessboard_width-2][0][1] - corners[chessboard_width-1][0][1]
+		tl_width = corners[2*chessboard_width-1][0][0] - corners[chessboard_width-1][0][0]
+		tl = corners[chessboard_width-1][0] + np.array([-2*tl_width, -2*tl_height])
+		
+		tr_height = corners[chessboard_width*chessboard_height-2][0][1] - corners[chessboard_width*chessboard_height-1][0][1]
+		tr_width = corners[chessboard_width*chessboard_height-1][0][0] - corners[chessboard_width*(chessboard_height-1)-1][0][0]
+		tr = corners[chessboard_width*chessboard_height-1][0] + np.array([2*tl_width, -2*tl_height])
+		
+		br_height = corners[chessboard_width*(chessboard_height-1)][0][1] - corners[chessboard_width*(chessboard_height-1)+1][0][1]
+		br_width = corners[chessboard_width*(chessboard_height-1)][0][0] - corners[chessboard_width*(chessboard_height-2)][0][0]
+		br = corners[chessboard_width*(chessboard_height-1)][0] + np.array([2*tl_width, 2*tl_height])
+		
+		projection_corners_on_camera = np.array([tl, tr, br, bl], dtype="float32")
+		
+		projection_corners_on_camera = cv.cornerSubPix(camera_frame_gray, projection_corners_on_camera, (11, 11), (-1, -1), criteria)
+		
+		camera_frame = draw_cv_polygon(camera_frame, projection_corners_on_camera)
+	
+	camera_frame = cv.drawChessboardCorners(camera_frame, chessboard_size, corners, ret)
+	cv.imshow("camera_frame", camera_frame)
 
 if __name__ == "__main__":
 	projection_main_loop(setup, render, projection_size,
