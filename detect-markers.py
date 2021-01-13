@@ -28,9 +28,8 @@ def draw(ctx, marker_corners, marker_ids):
 			marker_id = int(marker_ids[i][0])
 			corners = marker_corners[i][0]
 			
-			ctx.set_source_rgb(*Color.GREEN)
+			ctx.set_source_rgb(*Color.BLUE)
 			ctx.set_line_width(10)
-			
 			ctx.new_path()
 			for point in corners:
 				ctx.line_to(*point)
@@ -41,7 +40,7 @@ def draw(ctx, marker_corners, marker_ids):
 			ctx.arc(*corners[0], 5, 0, 2*math.pi)
 			ctx.fill()
 			
-			ctx.set_source_rgb(*Color.GREEN)
+			ctx.set_source_rgb(*Color.BLUE)
 			ctx.set_font_size(20)
 			ctx.move_to(*get_rightmost_corner(corners) + np.array([10, 0]))
 			ctx.show_text(str(marker_id))
