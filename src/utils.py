@@ -95,6 +95,7 @@ def projection_main_loop(setup, render, projection_size,
 	cap = get_camera_capture()
 	
 	start_time = time.time()
+	frame_before = None
 
 	took_screenshot = False
 	while not glfw.window_should_close(window):
@@ -102,7 +103,18 @@ def projection_main_loop(setup, render, projection_size,
 			# wait until window is open and maximized
 			if window_ready == None or time.time() > window_ready:
 				camera_frame, camera_frame_gray = get_camera_frame(cap)
-				render(state, camera_frame, camera_frame_gray)
+				
+				now = time.time()
+				if frame_before != None:
+					delta_time = now - frame_before
+				else:
+					delta_time = 0
+				frame_before = now
+				
+				render(state,
+					camera_frame=camera_frame,
+					camera_frame_gray=camera_frame_gray,
+					delta_time=delta_time)
 			
 			glfw.swap_buffers(window)
 			glfw.poll_events()

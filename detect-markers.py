@@ -54,7 +54,7 @@ def setup():
 	
 	return projection_texture, surface_data, ctx
 
-def render(state, camera_frame, camera_frame_gray):
+def render(state, camera_frame_gray, **kwargs):
 	projection_texture, surface_data, ctx = state
 	
 	marker_corners, marker_ids = detect_markers(camera_frame_gray)

@@ -13,7 +13,7 @@ def setup():
 	
 	return projection_texture
 
-def render(projection_texture, camera_frame, camera_frame_gray):
+def render(projection_texture, camera_frame, **kwargs):
 	output = cv.warpPerspective(camera_frame, perspective_transform, projection_size)
 	output = cv.cvtColor(output, cv.COLOR_RGB2RGBA)
 	output = cv_to_np(output)

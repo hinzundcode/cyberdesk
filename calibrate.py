@@ -24,7 +24,7 @@ def setup():
 	
 	return projection_texture
 
-def render(projection_texture, camera_frame, camera_frame_gray):
+def render(projection_texture, camera_frame, camera_frame_gray, **kwargs):
 	global projection_corners_on_camera
 	
 	draw_texture(projection_texture, projection_rect)
