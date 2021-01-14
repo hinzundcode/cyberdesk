@@ -3,6 +3,7 @@ import cv2 as cv
 import _config as config
 
 projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
+camera_size = config.camera_size
 projection_size = config.projection_size
 projection_rect = rect_corners(size=projection_size)
 
@@ -22,5 +23,6 @@ def render(projection_texture, camera_frame, **kwargs):
 	draw_texture(projection_texture, projection_rect)
 
 if __name__ == "__main__":
-	projection_main_loop(setup, render, projection_size,
+	projection_main_loop(setup, render,
+		projection_size, camera_size,
 		monitor_name=config.monitor_name)

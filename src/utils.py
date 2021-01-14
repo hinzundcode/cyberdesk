@@ -31,7 +31,7 @@ def move_window_to_monitor(window, monitor_name):
 	else:
 		return False
 
-def get_camera_capture(camera=1, width=1024, height=576):
+def get_camera_capture(width, height, camera=1):
 	cap = cv.VideoCapture(camera)
 	cap.set(cv.CAP_PROP_FRAME_WIDTH, width)
 	cap.set(cv.CAP_PROP_FRAME_HEIGHT, height)
@@ -66,7 +66,7 @@ def load_calibration(file_name="calibration.npz"):
 	
 	return np.load(file_name)
 
-def projection_main_loop(setup, render, projection_size,
+def projection_main_loop(setup, render, projection_size, camera_size,
 	monitor_name=None, maximize_window=True):
 	if not glfw.init():
 		return
@@ -95,7 +95,7 @@ def projection_main_loop(setup, render, projection_size,
 	
 	state = setup()
 	
-	cap = get_camera_capture()
+	cap = get_camera_capture(*camera_size)
 	
 	start_time = time.time()
 	frame_before = None

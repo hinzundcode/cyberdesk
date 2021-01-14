@@ -3,6 +3,7 @@ import cv2 as cv
 import _config as config
 import cairo
 
+camera_size = config.camera_size
 projection_size = config.projection_size
 projection_rect = rect_corners(size=projection_size)
 projection_corners_on_camera = None
@@ -64,7 +65,8 @@ def render(projection_texture, camera_frame, camera_frame_gray, **kwargs):
 	cv.imshow("camera_frame", camera_frame)
 
 if __name__ == "__main__":
-	projection_main_loop(setup, render, projection_size,
+	projection_main_loop(setup, render,
+		projection_size, camera_size,
 		monitor_name=config.monitor_name)
 	
 	if projection_corners_on_camera is not None:
