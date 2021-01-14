@@ -18,16 +18,18 @@ def maximize_current_window():
 	else:
 		print("maximize_current_window() is not implemented for " + system + " yet")
 
-def move_window_to_monitor(window, monitor_name, maximize=True):
+def move_window_to_monitor(window, monitor_name):
 	monitors = glfw.get_monitors()
-	monitor = monitors[0]
+	monitor = None
 	for m in monitors:
 		if glfw.get_monitor_name(m) == monitor_name:
 			monitor = m
 	
-	glfw.set_window_pos(window, *glfw.get_monitor_pos(monitor))
-	if maximize:
-		maximize_current_window()
+	if monitor is not None:
+		glfw.set_window_pos(window, *glfw.get_monitor_pos(monitor))
+		return True
+	else:
+		return False
 
 def get_camera_capture(camera=1, width=1024, height=576):
 	cap = cv.VideoCapture(camera)
@@ -82,8 +84,9 @@ def projection_main_loop(setup, render, projection_size,
 	window_ready = None
 	
 	if monitor_name != None:
-		move_window_to_monitor(window, monitor_name, maximize_window)
-		if maximize_window:
+		moved = move_window_to_monitor(window, monitor_name)
+		if moved and maximize_window:
+			maximize_current_window()
 			window_ready = time.time() + 2
 
 	glfw.make_context_current(window)
