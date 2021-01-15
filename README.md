@@ -20,4 +20,5 @@ monitor_name = b"NeoPix"
 | Application | Screenshot |
 |-------------|------------|
 | paint.py | <img alt="paint.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/paint.png" width="300" /> |
+| laser-game.py | <img alt="laser-game.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/laser-game.jpg" width="300" /> |
 | detect-markers.py | <img alt="detect-markers.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/detect-markers.jpg" width="300" /> |

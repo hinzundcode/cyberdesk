@@ -23,3 +23,9 @@ def draw_chessboard(ctx, size, field_size=80, border=80):
 			ctx.set_source_rgba(0, 0, 0, 1)
 			ctx.rectangle(x, y, field_size, field_size)
 			ctx.fill()
+
+def set_path_from_corners(ctx, corners):
+	ctx.new_path()
+	for point in corners:
+		ctx.line_to(*point)
+	ctx.close_path()

@@ -1,6 +1,7 @@
 import glfw
 from .gl import *
 from .graphics import *
+from .physics import *
 import os
 import sys
 import numpy as np
@@ -144,8 +145,57 @@ def rect_corners(size, position=(0, 0)):
 		[x, y+height]
 	], dtype="float32")
 
+def centered_rect_corners(position, size):
+	width = np.array([size[0], 0])
+	height = np.array([0, size[1]])
+	
+	return np.array([
+		position - width/2 - height/2,
+		position + width/2 - height/2,
+		position + width/2 + height/2,
+		position - width/2 + height/2,
+	], dtype="float32")
+
+def normalize(vector):
+	return vector / np.sqrt(np.sum(vector**2))
+
 def save_screenshot(frame):
 	now = datetime.now()
 	filename = "screenshot-{}.jpg".format(now.strftime("%Y%m%d-%H%M%S"))
 	cv.imwrite(filename, frame)
 	print("took a screenshot! "+filename)
+
+class Marker:
+	def __init__(self, id):
+		self.id = id
+		self.corners = None
+		self.absent_frames = None
+	
+	@property
+	def present(self):
+		return self.absent_frames == 0
+
+class MarkerTracker:
+	def __init__(self):
+		self.markers = {}
+	
+	def process_frame(self, marker_corners, marker_ids):
+		for _, marker in self.markers.items():
+			if marker.absent_frames != None:
+				marker.absent_frames += 1
+		
+		if marker_ids is not None:
+			for i in range(len(marker_ids)):
+				marker_id = str(marker_ids[i][0])
+				corners = marker_corners[i][0]
+				marker = self.get(marker_id)
+				marker.corners = corners
+				marker.absent_frames = 0
+	
+	def get(self, marker_id):
+		marker_id = str(marker_id)
+		
+		if marker_id not in self.markers:
+			self.markers[marker_id] = Marker(marker_id)
+		
+		return self.markers[marker_id]
