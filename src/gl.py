@@ -5,7 +5,8 @@ def set_orthagonal_camera(size):
 	
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	glOrtho(0.0, size[0], 0, size[1], 0.0, 1.0)
+	#glOrtho(0.0, size[0], 0, size[1], 0.0, 1.0)
+	glOrtho(0.0, size[0], size[1], 0, 0.0, 1.0) # flipped
 	
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
@@ -20,15 +21,18 @@ def draw_texture(texture, corners):
 
 	glBindTexture(GL_TEXTURE_2D, texture)
 	
+	# corner order: bottom_left, top_left, top_right, bottom_right
+	# (0, 0) is normally bottom left on the screen,
+	# but the orthagonal camera is flipped
 	glBegin(GL_QUADS)
 	glTexCoord2f(0, 0)
-	glVertex2f(*corners[3])
+	glVertex2f(*corners[0]) # tl
 	glTexCoord2f(0, 1)
-	glVertex2f(*corners[0])
+	glVertex2f(*corners[3]) # bl
 	glTexCoord2f(1, 1)
-	glVertex2f(*corners[1])
+	glVertex2f(*corners[2]) # br
 	glTexCoord2f(1, 0)
-	glVertex2f(*corners[2])
+	glVertex2f(*corners[1]) # tr
 	
 	glEnd() # Mark the end of drawing
 
