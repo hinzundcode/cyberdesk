@@ -66,8 +66,7 @@ def render(projection_texture, camera_frame, camera_frame_gray, **kwargs):
 
 if __name__ == "__main__":
 	projection_main_loop(setup, render,
-		projection_size, camera_size,
-		monitor_name=config.monitor_name)
+		**main_loop_config_args(config))
 	
 	if projection_corners_on_camera is not None:
 		np.savez("calibration.npz", projection_corners_on_camera=projection_corners_on_camera)

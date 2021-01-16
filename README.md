@@ -8,6 +8,7 @@
 camera_size = (1024, 576)
 projection_size = (1280, 720)
 monitor_name = b"NeoPix"
+camera_id = 0
 ```
 
 4. calibrate your camera/projector with `python calibrate.py`

@@ -32,8 +32,8 @@ def move_window_to_monitor(window, monitor_name):
 	else:
 		return False
 
-def get_camera_capture(width, height, camera=1):
-	cap = cv.VideoCapture(camera)
+def get_camera_capture(width, height, camera_id=0):
+	cap = cv.VideoCapture(camera_id)
 	cap.set(cv.CAP_PROP_FRAME_WIDTH, width)
 	cap.set(cv.CAP_PROP_FRAME_HEIGHT, height)
 	return cap
@@ -67,8 +67,24 @@ def load_calibration(file_name="calibration.npz"):
 	
 	return np.load(file_name)
 
-def projection_main_loop(setup, render, projection_size, camera_size,
-	monitor_name=None, maximize_window=True):
+def main_loop_config_args(config):
+	args = {}
+	
+	keys = [
+		"projection_size", "camera_size",
+		"monitor_name", "maximize_window",
+		"camera_id",
+	]
+	
+	for key in keys:
+		if hasattr(config, key):
+			args[key] = getattr(config, key)
+	
+	return args
+
+def projection_main_loop(setup, render,
+	projection_size=(1280, 720), camera_size=(1280, 720),
+	monitor_name=None, maximize_window=True, camera_id=0):
 	if not glfw.init():
 		return
 	
@@ -96,7 +112,7 @@ def projection_main_loop(setup, render, projection_size, camera_size,
 	
 	state = setup()
 	
-	cap = get_camera_capture(*camera_size)
+	cap = get_camera_capture(*camera_size, camera_id=camera_id)
 	
 	start_time = time.time()
 	frame_before = None
