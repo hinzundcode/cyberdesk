@@ -54,19 +54,19 @@ def create_texture(size, data=None):
 	
 	return texture
 
-def update_texture(texture, size, data):
+def update_texture(texture, size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
 	glBindTexture(GL_TEXTURE_2D, texture)
-	update_current_texture(size, data)
+	update_current_texture(size, data, format=format, type=type)
 	glBindTexture(GL_TEXTURE_2D, 0)
 
-def update_current_texture(size, data):
+def update_current_texture(size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
 	glTexImage2D(
 		GL_TEXTURE_2D, # target
 		0, # level
 		GL_RGB,# internal format
 		*size, # width, height
 		0, # border
-		GL_BGRA, # format
-		GL_UNSIGNED_INT_8_8_8_8_REV, # type
+		format, # format
+		type, # type
 		data # data
 	)
