@@ -11,7 +11,7 @@ def set_orthagonal_camera(size):
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 
-def draw_texture(texture, corners):
+def clear_frame():
 	glClear(GL_COLOR_BUFFER_BIT)
 	glLoadIdentity()
 	glDisable(GL_LIGHTING)
@@ -19,6 +19,7 @@ def draw_texture(texture, corners):
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	glClearColor(0, 0, 0, 1.0)
 
+def draw_texture(texture, corners):
 	glBindTexture(GL_TEXTURE_2D, texture)
 	
 	# corner order: bottom_left, top_left, top_right, bottom_right
@@ -33,8 +34,9 @@ def draw_texture(texture, corners):
 	glVertex2f(*corners[2]) # br
 	glTexCoord2f(1, 0)
 	glVertex2f(*corners[1]) # tr
-	
 	glEnd() # Mark the end of drawing
+	
+	glBindTexture(GL_TEXTURE_2D, 0)
 
 def create_texture(size, data=None):
 	texture = glGenTextures(1)

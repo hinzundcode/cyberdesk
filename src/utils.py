@@ -131,6 +131,8 @@ def projection_main_loop(setup, render,
 					delta_time = 0
 				frame_before = now
 				
+				clear_frame()
+				
 				render(state,
 					camera_frame=camera_frame,
 					camera_frame_gray=camera_frame_gray,
