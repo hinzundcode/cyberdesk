@@ -32,7 +32,9 @@ class VideoPaper(Paper):
 			format=GL_BGR, type=GL_UNSIGNED_BYTE)
 	
 	def render(self):
-		draw_texture(self.texture, self.space.project_corners(self.shape.corners))
+		tl, tr, br, bl = self.shape.corners
+		corners = [bl, tl, tr, br] # landscape
+		draw_texture(self.texture, self.space.project_corners(corners))
 	
 	def hide(self):
 		self.capture.release()
