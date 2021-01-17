@@ -100,7 +100,7 @@ def main():
 	with open("papers.json", "w") as file:
 		json.dump(papers, file, indent=2)
 			
-	with cairo.PDFSurface("test.pdf", DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS) as surface:
+	with cairo.PDFSurface("paper.pdf", DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS) as surface:
 		ctx = cairo.Context(surface)
 		marker_imgs = get_marker_images(*markers)
 		draw_rect_portrait_a4(ctx, marker_imgs, title=title)
