@@ -36,4 +36,7 @@ class VideoPaper(Paper):
 	
 	def hide(self):
 		self.capture.release()
-		# TODO: destroy texture
+		destroy_texture(self.texture)
+		
+		self.capture = None
+		self.texture = None
