@@ -2,13 +2,18 @@ import numpy as np
 import cv2 as cv
 
 class Space:
-	def __init__(self, projection_corners_on_camera, projection_rect):
+	def __init__(self, projection_corners_on_camera, camera_size, projection_rect):
 		self.papers = []
+		self.camera_size = camera_size
 		self.perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
+		self.current_camera_frame = None
 	
 	def add_paper(self, paper):
 		paper.space = self
 		self.papers.append(paper)
+	
+	def get_papers_of_type(self, paper_type):
+		return [paper for paper in self.papers if isinstance(paper, paper_type)]
 	
 	def update(self):
 		for paper in self.papers:

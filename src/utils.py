@@ -220,3 +220,8 @@ class MarkerTracker:
 	
 	def get_all(self, *marker_ids):
 		return list(map(self.get, marker_ids))
+
+def scale_polygon(corners, scale):
+	corners = np.array(corners)
+	center = np.average(corners, axis=0)
+	return (corners - center) * scale + center

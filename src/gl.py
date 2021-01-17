@@ -19,24 +19,30 @@ def clear_frame():
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	glClearColor(0, 0, 0, 1.0)
 
-def draw_texture(texture, corners):
-	glBindTexture(GL_TEXTURE_2D, texture)
-	
+def draw_rect_vertices(corners, uvs=[(0, 0), (0, 1), (1, 1), (1, 0)]):
 	# corner order: bottom_left, top_left, top_right, bottom_right
 	# (0, 0) is normally bottom left on the screen,
 	# but the orthagonal camera is flipped
 	glBegin(GL_QUADS)
-	glTexCoord2f(0, 0)
+	glTexCoord2f(*uvs[0])
 	glVertex2f(*corners[0]) # tl
-	glTexCoord2f(0, 1)
+	glTexCoord2f(*uvs[1])
 	glVertex2f(*corners[3]) # bl
-	glTexCoord2f(1, 1)
+	glTexCoord2f(*uvs[2])
 	glVertex2f(*corners[2]) # br
-	glTexCoord2f(1, 0)
+	glTexCoord2f(*uvs[3])
 	glVertex2f(*corners[1]) # tr
 	glEnd() # Mark the end of drawing
-	
+
+def draw_texture(texture, corners, uvs=[(0, 0), (0, 1), (1, 1), (1, 0)]):
+	glBindTexture(GL_TEXTURE_2D, texture)
+	draw_rect_vertices(corners, uvs)
 	glBindTexture(GL_TEXTURE_2D, 0)
+
+def draw_colored_rect(corners, color):
+	glColor3ub(*color)
+	draw_rect_vertices(corners)
+	glColor3f(1, 1, 1)
 
 def create_texture(size, data=None):
 	texture = glGenTextures(1)
@@ -70,3 +76,6 @@ def update_current_texture(size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_
 		type, # type
 		data # data
 	)
+
+def destroy_texture(texture):
+	glDeleteTextures([texture])
