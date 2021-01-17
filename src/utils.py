@@ -217,3 +217,6 @@ class MarkerTracker:
 			self.markers[marker_id] = Marker(marker_id)
 		
 		return self.markers[marker_id]
+	
+	def get_all(self, *marker_ids):
+		return list(map(self.get, marker_ids))
