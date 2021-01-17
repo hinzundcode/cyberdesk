@@ -50,7 +50,7 @@ $ python create-paper.py video --file <videofile>
 
 <img alt="portal papers screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/portal-papers.jpg" width="300" />
 
-Portals take a snapshot of the desk and project them back on the desk. You have to print to papers, one that captures a region of the desk (PortalIn) and one that projects it (PortalOut).
+Portals take a snapshot of the desk and project them back on the desk. You have to print two papers, one that captures a region of the desk (PortalIn) and one that projects it (PortalOut).
 
 Create them with:
 
