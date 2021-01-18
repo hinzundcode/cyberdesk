@@ -28,7 +28,7 @@ camera_id = 0
 
 <img alt="paperspace screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/paperspace.jpg" width="300" />
 
-The standalone demos like `pain.py` or `laser-game.py` run in fullscreen and take the whole desk. Paperspace takes a different approach. It's an application that can run many different little programs at once.
+The standalone demos like `paint.py` or `laser-game.py` run in fullscreen and take the whole desk. Paperspace takes a different approach. It's an application that can run many different little programs at once.
 
 Each program is represented by a piece of paper that you place on the table. Paperspace starts to execute that program as soon as it is visible and stops it when you take the paper away.
 
