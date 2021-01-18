@@ -12,7 +12,7 @@ camera_id = 0
 ```
 
 4. calibrate your camera/projector with `python calibrate.py`
-5. generate and print some markers with (`python generate-markers.py`)
+5. generate and print some markers with `python generate-markers.py`
 6. run an example program like `python detect-markers.py`
 7. have fun!
 
