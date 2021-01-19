@@ -1,7 +1,12 @@
-from src import *
+import numpy as np
 import cv2 as cv
-import _config as config
 import cairo
+import _config as config
+from cyberdesk.math import rect_corners
+from cyberdesk.calibration import draw_chessboard
+from cyberdesk.graphics3d import create_texture, draw_texture
+from cyberdesk.app import projection_main_loop, main_loop_config_args
+from cyberdesk import Color
 
 camera_size = config.camera_size
 projection_size = config.projection_size

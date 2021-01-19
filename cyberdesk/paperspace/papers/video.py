@@ -1,7 +1,7 @@
 import cv2 as cv
 from OpenGL.GL import GL_BGR, GL_UNSIGNED_BYTE
-from ..gl import create_texture, update_texture, draw_texture, destroy_texture
-from ..paperspace import Paper
+from cyberdesk.graphics3d import create_texture, update_texture, draw_texture, destroy_texture
+from cyberdesk.paperspace import Paper
 
 class VideoPaper(Paper):
 	def __init__(self, shape, video_size, video_file):

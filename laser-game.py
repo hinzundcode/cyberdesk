@@ -1,10 +1,16 @@
 import numpy as np
-from src import *
 import cv2 as cv
-import _config as config
-import cairo
-import math
 import random
+import cairo
+import _config as config
+from cyberdesk.calibration import load_calibration
+from cyberdesk.math import rect_corners, normalize, centered_rect_corners
+from cyberdesk.graphics2d import set_path_from_corners
+from cyberdesk.graphics3d import create_texture, update_texture, draw_texture
+from cyberdesk.app import projection_main_loop, main_loop_config_args
+from cyberdesk.physics import LineCollider, raycast
+from cyberdesk.vision import MarkerTracker, detect_markers
+from cyberdesk import Color
 
 class Mirror:
 	def __init__(self, left_id, right_id):
@@ -176,9 +182,8 @@ def render(state, camera_frame_gray, delta_time, **kwargs):
 	draw(ctx, mirrors, lasers, laser_paths, laser_target_hit)
 	cv_in = surface_data.view("uint8").reshape((camera_size[1], camera_size[0], 4))
 	cv_out = cv.warpPerspective(cv_in, perspective_transform, projection_size)
-	cv_out = cv_out.view("uint32")
 	
-	update_texture(projection_texture, projection_size, cv_out)
+	update_texture(projection_texture, projection_size, cv_out.view("uint32"))
 	draw_texture(projection_texture, projection_rect)
 
 if __name__ == "__main__":

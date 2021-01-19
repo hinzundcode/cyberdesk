@@ -1,7 +1,9 @@
-from src import *
 import argparse
+import os
 import json
 import cairo
+from cyberdesk.vision import get_marker_images
+from cyberdesk.paperspace import draw_rect_portrait_a4, DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS
 
 def get_free_markers(papers, count=1):
 	free_markers = list(range(0, 250))
@@ -84,7 +86,7 @@ def main():
 	video_parser = subparsers.add_parser("portal-in")
 	
 	video_parser = subparsers.add_parser("portal-out")
-	video_parser.add_argument("--portal-in")
+	video_parser.add_argument("--portal-in", required=True)
 	
 	args = parser.parse_args()
 	

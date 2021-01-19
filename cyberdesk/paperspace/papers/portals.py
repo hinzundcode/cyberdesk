@@ -1,8 +1,8 @@
 import numpy as np
 from OpenGL.GL import GL_BGR, GL_UNSIGNED_BYTE
-from ..gl import create_texture, update_texture, draw_texture, destroy_texture, draw_colored_rect
-from ..paperspace import Paper
-from ..utils import scale_polygon
+from cyberdesk.graphics3d import create_texture, update_texture, draw_texture, destroy_texture, draw_colored_rect
+from cyberdesk.paperspace import Paper
+from cyberdesk.math import scale_polygon
 
 class PortalIn(Paper):
 	def render(self):

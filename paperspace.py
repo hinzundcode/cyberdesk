@@ -1,7 +1,13 @@
-from src import *
-import cv2 as cv
-import _config as config
+import os
 import json
+import _config as config
+from cyberdesk.calibration import load_calibration
+from cyberdesk.math import rect_corners
+from cyberdesk.vision import MarkerTracker, detect_markers
+from cyberdesk.app import projection_main_loop, main_loop_config_args
+from cyberdesk.paperspace import RectShape, Space
+from cyberdesk.paperspace.papers.video import VideoPaper
+from cyberdesk.paperspace.papers.portals import PortalIn, PortalOut
 
 projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
 camera_size = config.camera_size

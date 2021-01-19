@@ -1,12 +1,12 @@
-class Color:
-	BLACK = (0, 0, 0)
-	RED = (255, 0, 0)
-	GREEN = (0, 255, 0)
-	BLUE = (0, 0, 255)
-	YELLOW = (255, 255, 0)
-	CYAN = (0, 255, 255)
-	MAGENTA = (255, 0, 255)
-	WHITE = (255, 255, 255)
+import numpy as np
+import os
+
+def load_calibration(file_name="calibration.npz"):
+	if not os.path.exists(file_name):
+		print('calibration data not found. run "python calibrate.py" first')
+		sys.exit(1)
+	
+	return np.load(file_name)
 
 def draw_chessboard(ctx, size, field_size=80, border=80):
 	ctx.set_source_rgba(1, 1, 1, 1)
@@ -23,9 +23,3 @@ def draw_chessboard(ctx, size, field_size=80, border=80):
 			ctx.set_source_rgba(0, 0, 0, 1)
 			ctx.rectangle(x, y, field_size, field_size)
 			ctx.fill()
-
-def set_path_from_corners(ctx, corners):
-	ctx.new_path()
-	for point in corners:
-		ctx.line_to(*point)
-	ctx.close_path()

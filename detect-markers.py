@@ -1,8 +1,14 @@
-from src import *
+import numpy as np
 import cv2 as cv
-import _config as config
 import cairo
 import math
+import _config as config
+from cyberdesk.calibration import load_calibration
+from cyberdesk.math import rect_corners
+from cyberdesk.graphics3d import create_texture, update_texture, draw_texture
+from cyberdesk.vision import detect_markers
+from cyberdesk.app import projection_main_loop, main_loop_config_args
+from cyberdesk import Color
 
 projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
 camera_size = config.camera_size
@@ -62,9 +68,8 @@ def render(state, camera_frame_gray, **kwargs):
 	draw(ctx, marker_corners, marker_ids)
 	cv_in = surface_data.view("uint8").reshape((camera_size[1], camera_size[0], 4))
 	cv_out = cv.warpPerspective(cv_in, perspective_transform, projection_size)
-	cv_out = cv_out.view("uint32")
 	
-	update_texture(projection_texture, projection_size, cv_out)
+	update_texture(projection_texture, projection_size, cv_out.view("uint32"))
 	draw_texture(projection_texture, projection_rect)
 
 if __name__ == "__main__":

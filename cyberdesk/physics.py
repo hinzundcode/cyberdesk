@@ -1,26 +1,10 @@
-import numpy as np
+from cyberdesk.math import line_intersection, distance_squared
 
 class LineCollider:
 	def __init__(self, left, right, object=None):
 		self.left = left
 		self.right = right
 		self.object = object
-
-def line_intersection(a, b, c, d):
-	ab = -a+b
-	cd = -c+d
-	
-	coeffs = np.array([[ab[0], -cd[0]], [ab[1], -cd[1]]])
-	right = c-a
-	solution = np.linalg.solve(coeffs, right)
-	
-	if 0 <= solution[0]  and solution[0] <= 1 and 0 <= solution[1] and solution[1] <= 1:
-		return a + ab*solution[0]
-	else:
-		return None
-
-def distance_squared(a, b):
-	return (b[0] - a[0])**2 + (b[1] - a[1])**2
 
 def raycast(position, direction, colliders, length=100):
 	ray_start = position
