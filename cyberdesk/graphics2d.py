@@ -23,3 +23,14 @@ def set_path_from_corners(ctx, corners):
 	for point in corners:
 		ctx.line_to(*point)
 	ctx.close_path()
+
+def draw_text_centered(ctx, text, text_pos, text_size, font_size=None):
+	if font_size != None:
+		ctx.set_font_size(font_size)
+		
+	extents = ctx.text_extents(text)
+	ctx.move_to(
+		text_pos[0] + text_size[0]/2 - extents.width/2 - extents.x_bearing,
+		text_pos[1] + text_size[1]/2 - extents.height/2 - extents.y_bearing
+	)
+	ctx.show_text(text)
