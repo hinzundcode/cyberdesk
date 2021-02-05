@@ -44,7 +44,7 @@ def draw_colored_rect(corners, color):
 	draw_rect_vertices(corners)
 	glColor3f(1, 1, 1)
 
-def create_texture(size, data=None):
+def create_texture(size, data=None, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
 	texture = glGenTextures(1)
 	glPixelStorei(GL_UNPACK_ALIGNMENT,1)
 	glBindTexture(GL_TEXTURE_2D, texture)
@@ -54,7 +54,7 @@ def create_texture(size, data=None):
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 	if data is not None:
-		update_current_texture(size, data)
+		update_current_texture(size, data, format, type)
 	
 	glBindTexture(GL_TEXTURE_2D, 0)
 	
