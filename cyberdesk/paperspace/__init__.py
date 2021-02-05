@@ -6,20 +6,23 @@ from cyberdesk.graphics3d import create_texture, update_texture, draw_texture, d
 
 class Space:
 	def __init__(self, projection_corners_on_camera, camera_size, projection_rect):
-		self.papers = []
+		self.papers = {}
 		self.camera_size = camera_size
 		self.perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
 		self.current_camera_frame = None
 	
-	def add_paper(self, paper):
+	def add_paper(self, paper_id, paper):
 		paper.space = self
-		self.papers.append(paper)
+		self.papers[paper_id] = paper
+	
+	def get_paper(self, paper_id):
+		return self.papers.get(paper_id)
 	
 	def get_papers_of_type(self, paper_type):
-		return [paper for paper in self.papers if isinstance(paper, paper_type)]
+		return [paper for paper in self.papers.values() if isinstance(paper, paper_type)]
 	
 	def update(self):
-		for paper in self.papers:
+		for paper in self.papers.values():
 			paper.shape.update()
 			if not paper.visible and paper.shape.present:
 				print("show paper", paper)
@@ -30,12 +33,12 @@ class Space:
 				paper.hide()
 				paper.visible = False
 		
-		for paper in self.papers:
+		for paper in self.papers.values():
 			if paper.visible:
 				paper.update()
 	
 	def render(self):
-		for paper in self.papers:
+		for paper in self.papers.values():
 			if paper.visible:
 				paper.render()
 	

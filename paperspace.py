@@ -48,7 +48,7 @@ def setup():
 	
 	with open("papers.json", "r") as file:
 		for data in json.load(file):
-			space.add_paper(parse_paper_json(data, markers))
+			space.add_paper(data["id"], parse_paper_json(data, markers))
 	
 	return markers, space
 
