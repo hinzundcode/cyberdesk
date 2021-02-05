@@ -28,7 +28,7 @@ def move_window_to_monitor(window, monitor_name):
 	else:
 		return False
 
-def main_loop_config_args(config):
+def main_loop_config_args(config, **kwargs):
 	args = {}
 	
 	keys = [
@@ -41,7 +41,7 @@ def main_loop_config_args(config):
 		if hasattr(config, key):
 			args[key] = getattr(config, key)
 	
-	return args
+	return { **args, **kwargs }
 
 def save_screenshot(frame):
 	now = datetime.now()
