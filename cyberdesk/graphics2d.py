@@ -34,3 +34,12 @@ def draw_text_centered(ctx, text, text_pos, text_size, font_size=None):
 		text_pos[1] + text_size[1]/2 - extents.height/2 - extents.y_bearing
 	)
 	ctx.show_text(text)
+
+def draw_text_multiline(ctx, text, text_pos, font_size=25):
+	ctx.set_font_size(font_size)
+	
+	x, y = text_pos
+	for line in text.split("\n"):
+		ctx.move_to(x, y)
+		ctx.show_text(line)
+		y += font_size
