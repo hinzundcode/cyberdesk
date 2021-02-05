@@ -1,6 +1,6 @@
 import cv2 as cv
 from OpenGL.GL import GL_BGR, GL_UNSIGNED_BYTE
-from cyberdesk.graphics3d import create_texture, update_texture, draw_texture, destroy_texture
+from cyberdesk.graphics3d import Texture
 from cyberdesk.paperspace import Paper
 
 class VideoPaper(Paper):
@@ -13,7 +13,7 @@ class VideoPaper(Paper):
 	
 	def show(self):
 		self.capture = cv.VideoCapture(self.video_file)
-		self.texture = create_texture(self.video_size)
+		self.texture = Texture(self.video_size, format=GL_BGR, type=GL_UNSIGNED_BYTE)
 	
 	def update(self):
 		if not self.shape.present:
@@ -27,18 +27,14 @@ class VideoPaper(Paper):
 				return
 		
 		frame = cv.resize(frame, self.video_size)
-		
-		update_texture(self.texture, self.video_size, frame,
-			format=GL_BGR, type=GL_UNSIGNED_BYTE)
+		self.texture.update(frame)
 	
 	def render(self):
 		tl, tr, br, bl = self.shape.corners
 		corners = [bl, tl, tr, br] # landscape
-		draw_texture(self.texture, self.space.project_corners(corners))
+		self.texture.draw(self.space.project_corners(corners))
 	
 	def hide(self):
 		self.capture.release()
-		destroy_texture(self.texture)
-		
 		self.capture = None
 		self.texture = None
