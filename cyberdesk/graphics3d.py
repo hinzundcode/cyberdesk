@@ -78,7 +78,10 @@ def update_current_texture(size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_
 	)
 
 def destroy_texture(texture):
-	glDeleteTextures([texture])
+	try:
+		glDeleteTextures([texture])
+	except:
+		pass
 
 class Texture:
 	def __init__(self, size, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
