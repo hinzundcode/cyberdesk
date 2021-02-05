@@ -9,6 +9,7 @@ from cyberdesk.paperspace import RectShape, Space
 from cyberdesk.paperspace.papers.video import VideoPaper
 from cyberdesk.paperspace.papers.portals import PortalIn, PortalOut
 from cyberdesk.paperspace.papers.gamepad import GamepadPaper
+from cyberdesk.paperspace.papers.python import PythonPaper
 
 projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
 camera_size = config.camera_size
@@ -30,6 +31,9 @@ def parse_paper_json(data, markers):
 	elif data["type"] == "gamepad":
 		shape = RectShape(markers.get_all(*data["markers"]))
 		paper = GamepadPaper(shape, data["gamepad_id"])
+	elif data["type"] == "python":
+		shape = RectShape(markers.get_all(*data["markers"]))
+		paper = PythonPaper(shape, data["filename"])
 	
 	return paper
 

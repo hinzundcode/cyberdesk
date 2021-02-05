@@ -95,6 +95,24 @@ def create_gamepad_paper(papers, args, ctx):
 	
 	return markers, data, title
 
+def create_python_paper(papers, args, ctx):
+	paper_id = get_next_paper_id(papers)
+	markers = get_free_markers(papers, count=4)
+	
+	data = {
+		"id": paper_id,
+		"type": "python",
+		"markers": markers,
+		"filename": args.filename,
+	}
+	
+	title = "Python(filename={}) #{}".format(args.filename, paper_id)
+	
+	marker_imgs = get_marker_images(*markers)
+	draw_rect_landscape_a5(ctx, marker_imgs, title=title)
+	
+	return markers, data, title
+
 def create_paper_from_args(papers, args, ctx):
 	if args.type == "video":
 		return create_video_paper(papers, args, ctx)
@@ -104,6 +122,8 @@ def create_paper_from_args(papers, args, ctx):
 		return create_portal_out_paper(papers, args, ctx)
 	elif args.type == "gamepad":
 		return create_gamepad_paper(papers, args, ctx)
+	elif args.type == "python":
+		return create_python_paper(papers, args, ctx)
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -112,13 +132,16 @@ def main():
 	video_parser = subparsers.add_parser("video")
 	video_parser.add_argument("--file", required=True)
 	
-	video_parser = subparsers.add_parser("portal-in")
+	subparsers.add_parser("portal-in")
 	
-	video_parser = subparsers.add_parser("portal-out")
-	video_parser.add_argument("--portal-in", required=True)
+	portal_out_parser = subparsers.add_parser("portal-out")
+	portal_out_parser.add_argument("--portal-in", required=True)
 	
-	video_parser = subparsers.add_parser("gamepad")
-	video_parser.add_argument("--gamepad-id", type=int, required=True)
+	gamepad_parser = subparsers.add_parser("gamepad")
+	gamepad_parser.add_argument("--gamepad-id", type=int, required=True)
+	
+	python_parser = subparsers.add_parser("python")
+	python_parser.add_argument("--filename", required=True)
 	
 	args = parser.parse_args()
 	
