@@ -2,7 +2,7 @@ import numpy as np
 import cv2 as cv
 import cairo
 from cyberdesk.graphics2d import create_monochrome_surface, draw_image
-from cyberdesk.graphics3d import create_texture, update_texture, draw_texture, destroy_texture
+from cyberdesk.graphics3d import Texture
 
 class Space:
 	def __init__(self, projection_corners_on_camera, camera_size, projection_rect):
@@ -162,14 +162,11 @@ def draw_rect_landscape_a5(ctx, markers, title=""):
 class CanvasTexture:
 	def __init__(self, size):
 		self.size = size
-		self.texture = create_texture(size)
+		self.texture = Texture(size)
 		self.data = np.zeros(shape=size, dtype=np.uint32)
 		self.surface = cairo.ImageSurface.create_for_data(self.data, cairo.FORMAT_ARGB32, *size)
 		self.ctx = cairo.Context(self.surface)
 	
 	def draw(self, corners):
-		update_texture(self.texture, self.size, self.data)
-		draw_texture(self.texture, corners)
-	
-	def __del__(self):
-		destroy_texture(self.texture)
+		self.texture.update(self.data)
+		self.texture.draw(corners)
