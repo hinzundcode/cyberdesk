@@ -79,3 +79,19 @@ def update_current_texture(size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_
 
 def destroy_texture(texture):
 	glDeleteTextures([texture])
+
+class Texture:
+	def __init__(self, size, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
+		self.texture = create_texture(size, format=format, type=type)
+		self.size = size
+		self.format = format
+		self.type = type
+	
+	def update(self, data):
+		update_texture(self.texture, self.size, data, format=self.format, type=self.type)
+	
+	def draw(self, corners, uvs=[(0, 0), (0, 1), (1, 1), (1, 0)]):
+		draw_texture(self.texture, corners, uvs=uvs)
+	
+	def __del__(self):
+		destroy_texture(self.texture)
