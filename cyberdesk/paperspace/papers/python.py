@@ -1,3 +1,5 @@
+import numpy as np
+import OpenGL.GL as GL
 from cyberdesk.paperspace import Paper
 import cyberdesk.graphics2d
 import cyberdesk.graphics3d
@@ -8,6 +10,8 @@ from cyberdesk import Color
 
 def get_environment():
 	return {
+		"np": np,
+		"GL": GL,
 		"graphics2d": cyberdesk.graphics2d,
 		"graphics3d": cyberdesk.graphics3d,
 		"math": cyberdesk.math,
@@ -21,36 +25,32 @@ class PythonPaper(Paper):
 		super().__init__(shape)
 		self.filename = filename
 		self.code = None
-		self.globals = None
-		self.locals = None
+		self.scope = None
 	
 	def show(self):
 		with open(self.filename, "r") as file:
 			source = file.read()
 		
 		self.code = compile(source, self.filename, "exec")
-		
-		self.globals = {
+		self.scope = {
 			**get_environment(),
 			"shape": self.shape,
 			"space": self.space,
 		}
-		self.locals = {}
 		
-		exec(self.code, self.globals, self.locals)
+		exec(self.code, self.scope, self.scope)
 	
 	def update(self):
-		if "update" in self.locals:
-			self.locals["update"]()
+		if "update" in self.scope:
+			self.scope["update"]()
 	
 	def render(self):
-		if "render" in self.locals:
-			self.locals["render"]()
+		if "render" in self.scope:
+			self.scope["render"]()
 	
 	def hide(self):
-		if "hide" in self.locals:
-			self.locals["hide"]()
+		if "hide" in self.scope:
+			self.scope["hide"]()
 		
 		self.code = None
-		self.globals = None
-		self.locals = None
+		self.scope = None
