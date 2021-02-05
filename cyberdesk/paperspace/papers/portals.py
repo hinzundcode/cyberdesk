@@ -1,6 +1,6 @@
 import numpy as np
 from OpenGL.GL import GL_BGR, GL_UNSIGNED_BYTE
-from cyberdesk.graphics3d import create_texture, update_texture, draw_texture, destroy_texture, draw_colored_rect
+from cyberdesk.graphics3d import Texture, draw_colored_rect, corners_to_uvs
 from cyberdesk.paperspace import Paper
 from cyberdesk.math import scale_polygon
 
@@ -18,7 +18,7 @@ class PortalOut(Paper):
 		self.portal_in = None
 	
 	def show(self):
-		self.texture = create_texture(self.space.camera_size)
+		self.texture = Texture(self.space.camera_size, format=GL_BGR, type=GL_UNSIGNED_BYTE)
 	
 	def update(self):
 		portal_ins = self.space.get_papers_of_type(PortalIn)
@@ -27,8 +27,7 @@ class PortalOut(Paper):
 		else:
 			self.portal_in = None
 		
-		update_texture(self.texture, self.space.camera_size,
-			self.space.current_camera_frame, format=GL_BGR, type=GL_UNSIGNED_BYTE)
+		self.texture.update(self.space.current_camera_frame)
 	
 	def render(self):
 		outer_rect = self.shape.corners
@@ -36,16 +35,9 @@ class PortalOut(Paper):
 		
 		if self.portal_in != None:
 			inner_rect = scale_polygon(self.shape.corners, 0.9)
-			portal_in_inner_rect = np.array(scale_polygon(self.portal_in.shape.corners, 0.9))
-			camera_size = np.array(self.space.camera_size)
-			uvs = [
-				portal_in_inner_rect[0] / camera_size,
-				portal_in_inner_rect[3] / camera_size,
-				portal_in_inner_rect[2] / camera_size,
-				portal_in_inner_rect[1] / camera_size,
-			]
-			draw_texture(self.texture, self.space.project_corners(inner_rect), uvs)
+			portal_in_inner_rect = scale_polygon(self.portal_in.shape.corners, 0.9)
+			uvs = corners_to_uvs(portal_in_inner_rect, self.texture.size)
+			self.texture.draw(self.space.project_corners(inner_rect), uvs)
 	
 	def hide(self):
-		destroy_texture(self.texture)
 		self.texture = None

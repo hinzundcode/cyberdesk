@@ -83,6 +83,14 @@ def destroy_texture(texture):
 	except:
 		pass
 
+def corners_to_uvs(corners, size):
+	return [
+		(corners[0][0] / size[0], corners[0][1] / size[1]),
+		(corners[3][0] / size[0], corners[3][1] / size[1]),
+		(corners[2][0] / size[0], corners[2][1] / size[1]),
+		(corners[1][0] / size[0], corners[1][1] / size[1]),
+	]
+
 class Texture:
 	def __init__(self, size, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
 		self.texture = create_texture(size, format=format, type=type)
