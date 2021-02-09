@@ -1,6 +1,7 @@
 import numpy as np
 import cv2 as cv
 import cairo
+import time
 from cyberdesk.graphics2d import create_monochrome_surface, draw_image
 from cyberdesk.graphics3d import Texture
 
@@ -72,6 +73,7 @@ class SingleShape:
 		self.corners = None
 		self.present = False
 		self.smooth = smooth
+		self.ignore_absence_until = None
 	
 	def update(self):
 		if self.absent_after != None and self.marker.absent_time != None:
@@ -84,6 +86,15 @@ class SingleShape:
 				self.corners = smooth_corners(self.marker.corners, self.corners)
 			else:
 				self.corners = self.marker.corners
+		
+		if self.ignore_absence_until != None:
+			if time.time() < self.ignore_absence_until:
+				self.present = True
+			else:
+				self.ignore_absence_until = False
+	
+	def ignore_absence(self, seconds):
+		self.ignore_absence_until = time.time() + seconds
 	
 	def __str__(self):
 		return "SingleShape({})".format(self.marker.id)

@@ -41,8 +41,14 @@ class ShortcutButton(Paper):
 		self.events = []
 		
 		for event in events:
-			if event == ButtonEvent.PRESS:
+			if event == ButtonEvent.HOLD:
 				self.pressed = True
+			elif event == ButtonEvent.HOLD_UP:
+				self.pressed = False
+		
+		# keep visible when held down and marker is not visible
+		if self.pressed:
+			self.shape.ignore_absence(seconds=3)
 	
 	def render(self):
 		tl, tr, br, bl = self.shape.corners
