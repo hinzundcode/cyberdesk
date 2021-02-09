@@ -16,9 +16,6 @@ class VideoPaper(Paper):
 		self.texture = Texture(self.video_size, format=GL_BGR, type=GL_UNSIGNED_BYTE)
 	
 	def update(self):
-		if not self.shape.present:
-			return
-		
 		ret, frame = self.capture.read()
 		if not ret:
 			self.capture.set(cv.CAP_PROP_POS_FRAMES, 0)
