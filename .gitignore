@@ -5,4 +5,5 @@ __pycache__
 /screenshot-*.jpg
 /papers.json
 /paper.pdf
+/papers
 gamecontrollerdb.txt
