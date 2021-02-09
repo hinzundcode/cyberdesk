@@ -1,5 +1,6 @@
 import cv2 as cv
 import cv2.aruco as aruco
+import time
 
 def get_camera_capture(width, height, camera_id=0):
 	cap = cv.VideoCapture(camera_id)
@@ -30,16 +31,26 @@ class Marker:
 		self.id = id
 		self.corners = None
 		self.absent_frames = None
+		self.last_seen = None
 	
 	@property
 	def present(self):
 		return self.absent_frames == 0
+	
+	@property
+	def absent_time(self):
+		if self.last_seen is None:
+			return None
+		else:
+			return time.time() - self.last_seen
 
 class MarkerTracker:
 	def __init__(self):
 		self.markers = {}
 	
 	def process_frame(self, marker_corners, marker_ids):
+		now = time.time()
+		
 		for _, marker in self.markers.items():
 			if marker.absent_frames != None:
 				marker.absent_frames += 1
@@ -51,6 +62,7 @@ class MarkerTracker:
 				marker = self.get(marker_id)
 				marker.corners = corners
 				marker.absent_frames = 0
+				marker.last_seen = now
 	
 	def get(self, marker_id):
 		marker_id = str(marker_id)
