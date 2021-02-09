@@ -65,6 +65,29 @@ class RectShape:
 	def __str__(self):
 		return "RectShape({},{},{},{})".format(*[marker.id for marker in self.markers])
 
+class SingleShape:
+	def __init__(self, marker, absent_after=None, smooth=True):
+		self.marker = marker
+		self.absent_after = absent_after
+		self.corners = None
+		self.present = False
+		self.smooth = smooth
+	
+	def update(self):
+		if self.absent_after != None and self.marker.absent_time != None:
+			self.present = self.marker.absent_time < self.absent_after
+		else:
+			self.present = self.marker.present
+		
+		if self.present:
+			if self.smooth:
+				self.corners = smooth_corners(self.marker.corners, self.corners)
+			else:
+				self.corners = self.marker.corners
+	
+	def __str__(self):
+		return "SingleShape({})".format(self.marker.id)
+
 class Paper:
 	def __init__(self, shape):
 		self.shape = shape
@@ -160,6 +183,13 @@ def draw_rect_landscape_a5(ctx, markers, title=""):
 			mm_to_points(page_size[1]/2 - border[1]/2)
 		)
 		ctx.show_text(title)
+
+def draw_single_marker(ctx, marker, size_in_cm=3):
+	img = create_monochrome_surface(marker, marker.shape)
+	pos_points = (mm_to_points(10), mm_to_points(10))
+	marker_size_points = (mm_to_points(size_in_cm*10), mm_to_points(size_in_cm*10))
+		
+	draw_image(ctx, img, pos_points, marker_size_points)
 
 class CanvasTexture:
 	def __init__(self, size):
