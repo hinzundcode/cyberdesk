@@ -3,7 +3,7 @@ import os
 import json
 import cairo
 from cyberdesk.vision import get_marker_images
-from cyberdesk.paperspace import draw_rect_portrait_a4, draw_rect_landscape_a5, DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS
+from cyberdesk.paperspace import draw_rect_portrait_a4, draw_rect_landscape_a5, draw_single_marker, DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS
 
 def get_free_markers(papers, count=1):
 	free_markers = list(range(0, 250))
@@ -113,6 +113,25 @@ def create_python_paper(papers, args, ctx):
 	
 	return markers, data, title
 
+def create_shortcut_button_paper(papers, args, ctx):
+	paper_id = get_next_paper_id(papers)
+	markers = get_free_markers(papers, count=1)
+	
+	data = {
+		"id": paper_id,
+		"type": "shortcut-button",
+		"markers": markers,
+		"mqtt_topic": args.mqtt_topic,
+		"mqtt_host": args.mqtt_host,
+	}
+	
+	title = "ShortcutButton(mqtt_topic={}, mqtt_host={}) #{}".format(args.mqtt_topic, args.mqtt_host, paper_id)
+	
+	marker_imgs = get_marker_images(*markers)
+	draw_single_marker(ctx, marker_imgs[0], size_in_cm=3.5)
+	
+	return markers, data, title
+
 def create_paper_from_args(papers, args, ctx):
 	if args.type == "video":
 		return create_video_paper(papers, args, ctx)
@@ -124,6 +143,8 @@ def create_paper_from_args(papers, args, ctx):
 		return create_gamepad_paper(papers, args, ctx)
 	elif args.type == "python":
 		return create_python_paper(papers, args, ctx)
+	elif args.type == "shortcut-button":
+		return create_shortcut_button_paper(papers, args, ctx)
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -142,6 +163,10 @@ def main():
 	
 	python_parser = subparsers.add_parser("python")
 	python_parser.add_argument("--filename", required=True)
+	
+	shortcut_button_parser = subparsers.add_parser("shortcut-button")
+	shortcut_button_parser.add_argument("--mqtt-topic", required=True)
+	shortcut_button_parser.add_argument("--mqtt-host", required=True)
 	
 	args = parser.parse_args()
 	

@@ -5,11 +5,12 @@ from cyberdesk.calibration import load_calibration
 from cyberdesk.math import rect_corners
 from cyberdesk.vision import MarkerTracker, detect_markers
 from cyberdesk.app import projection_main_loop, main_loop_config_args
-from cyberdesk.paperspace import RectShape, Space
+from cyberdesk.paperspace import RectShape, SingleShape, Space
 from cyberdesk.paperspace.papers.video import VideoPaper
 from cyberdesk.paperspace.papers.portals import PortalIn, PortalOut
 from cyberdesk.paperspace.papers.gamepad import GamepadPaper
 from cyberdesk.paperspace.papers.python import PythonPaper
+from cyberdesk.paperspace.papers.zigbee import ShortcutButton
 
 projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
 camera_size = config.camera_size
@@ -34,6 +35,9 @@ def parse_paper_json(data, markers):
 	elif data["type"] == "python":
 		shape = RectShape(markers.get_all(*data["markers"]))
 		paper = PythonPaper(shape, data["filename"])
+	elif data["type"] == "shortcut-button":
+		shape = SingleShape(markers.get_all(*data["markers"])[0], absent_after=1)
+		paper = ShortcutButton(shape, data["mqtt_topic"], data["mqtt_host"])
 	
 	return paper
 
