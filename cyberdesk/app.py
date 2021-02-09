@@ -7,13 +7,36 @@ import time
 from cyberdesk.graphics3d import set_orthagonal_camera, clear_frame
 from cyberdesk.vision import get_camera_capture, get_camera_frame
 
-def maximize_current_window():
+def try_maximize_window_osx():
+	try:
+		from AppKit import NSApplication
+	except ImportError:
+		print("try_maximize_window_osx(): install pyobjc to maximize the window on osx")
+		return True
+	
+	app = NSApplication.sharedApplication()
+	
+	# wait until window is ready
+	if app.mainWindow() is not None:
+		menu = app.mainMenu()
+		window_menu = menu.itemArray()[1].submenu()
+		
+		for i, menu_item in enumerate(window_menu.itemArray()):
+			if menu_item.action() == "toggleFullScreen:":
+				window_menu.performActionForItemAtIndex_(i)
+		
+		return True
+	
+	return False
+
+def try_maximize_window():
 	system = platform.system()
 	
 	if system == "Darwin":
-		os.system("""osascript -e 'tell application "System Events" to keystroke "f" using { command down, control down }'""")
+		return try_maximize_window_osx()
 	else:
-		print("maximize_current_window() is not implemented for " + system + " yet")
+		print("try_maximize_window() is not implemented for " + system + " yet")
+		return True
 
 def move_window_to_monitor(window, monitor_name):
 	monitors = glfw.get_monitors()
@@ -70,13 +93,12 @@ def projection_main_loop(setup, render,
 			glfw.set_window_should_close(window, True)
 	glfw.set_key_callback(window, on_key)
 	
-	window_ready = None
+	wait_until_window_maximized = False
 	
 	if monitor_name != None:
 		moved = move_window_to_monitor(window, monitor_name)
 		if moved and maximize_window:
-			maximize_current_window()
-			window_ready = time.time() + 2
+			wait_until_window_maximized = True
 
 	glfw.make_context_current(window)
 	
@@ -93,9 +115,13 @@ def projection_main_loop(setup, render,
 
 	took_screenshot = False
 	while not glfw.window_should_close(window):
+		if wait_until_window_maximized:
+			if try_maximize_window():
+				wait_until_window_maximized = False
+		
 		try:
 			# wait until window is open and maximized
-			if window_ready == None or time.time() > window_ready:
+			if not wait_until_window_maximized:
 				camera_frame, camera_frame_gray = get_camera_frame(cap)
 				
 				now = time.time()
