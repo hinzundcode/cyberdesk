@@ -46,16 +46,18 @@ class Space:
 		return cv.perspectiveTransform(np.array([corners], dtype="float32"), self.perspective_transform)[0]
 
 class RectShape:
-	def __init__(self, markers):
+	def __init__(self, markers, smooth=True):
 		self.markers = markers
 		self.corners = None
 		self.present = False
+		self.smooth = smooth
 	
 	def update(self):
 		tl, tr, br, bl = self.markers
 		
 		if tl.present and tr.present and br.present and bl.present:
-			self.corners = [tl.corners[0], tr.corners[0], br.corners[0], bl.corners[0]]
+			corners = np.array([tl.corners[0], tr.corners[0], br.corners[0], bl.corners[0]])
+			self.corners = smooth_corners(corners, self.corners) if self.smooth else corners
 			self.present = True
 		else:
 			self.present = False
@@ -170,3 +172,13 @@ class CanvasTexture:
 	def draw(self, corners):
 		self.texture.update(self.data)
 		self.texture.draw(corners)
+
+def smooth_corners(new_corners, old_corners, min_diff=2):
+	if old_corners is None:
+		return new_corners
+	
+	diff = np.abs(old_corners - new_corners).max()
+	if diff >= min_diff:
+		return new_corners
+	else:
+		return old_corners
