@@ -83,7 +83,6 @@ def corners_moved(new_corners, old_corners, min_diff=2):
 		if corners is not None:
 			diff = np.abs(old_corners[i] - corners).max()
 			if diff >= min_diff:
-				print("diff", diff)
 				return True
 	
 	return False
