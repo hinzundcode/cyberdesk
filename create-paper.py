@@ -3,7 +3,7 @@ import os
 import json
 import cairo
 from cyberdesk.vision import get_marker_images
-from cyberdesk.paperspace import draw_rect_portrait_a4, draw_rect_landscape_a5, draw_single_marker, DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS
+from cyberdesk.paperspace.printing import draw_rect_portrait_a4, draw_rect_landscape_a5, draw_single_marker, DIN_A4_WIDTH_POINTS, DIN_A4_HEIGHT_POINTS
 
 def get_free_markers(papers, count=1):
 	free_markers = list(range(0, 250))

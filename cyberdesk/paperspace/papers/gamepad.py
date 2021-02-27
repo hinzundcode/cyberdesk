@@ -2,8 +2,9 @@ import numpy as np
 import glfw
 import math
 from enum import IntEnum
-from cyberdesk.paperspace import Paper, CanvasTexture
+from cyberdesk.paperspace import Paper
 from cyberdesk.graphics2d import draw_text_centered
+from cyberdesk.graphics3d import CanvasTexture
 from cyberdesk.input import Gamepad, GamepadButton, GamepadAxis
 from cyberdesk import Color
 

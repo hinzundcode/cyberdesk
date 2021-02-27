@@ -1,4 +1,6 @@
 from OpenGL.GL import *
+import numpy as np
+import cairo
 
 def set_orthagonal_camera(size):
 	glViewport(0, 0, *size)
@@ -120,3 +122,15 @@ class Texture:
 	
 	def __del__(self):
 		destroy_texture(self.texture)
+
+class CanvasTexture:
+	def __init__(self, size):
+		self.size = size
+		self.texture = Texture(size)
+		self.data = np.zeros(shape=size, dtype=np.uint32)
+		self.surface = cairo.ImageSurface.create_for_data(self.data, cairo.FORMAT_ARGB32, *size)
+		self.ctx = cairo.Context(self.surface)
+	
+	def draw(self, corners):
+		self.texture.update(self.data)
+		self.texture.draw(corners)

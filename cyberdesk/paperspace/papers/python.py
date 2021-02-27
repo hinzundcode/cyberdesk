@@ -1,7 +1,8 @@
 import numpy as np
 import OpenGL.GL as GL
-from cyberdesk.paperspace import Paper, CanvasTexture
+from cyberdesk.paperspace import Paper
 from cyberdesk.graphics2d import draw_text_centered, draw_text_multiline
+from cyberdesk.graphics3d import CanvasTexture
 import cyberdesk.graphics2d
 import cyberdesk.graphics3d
 import cyberdesk.math
