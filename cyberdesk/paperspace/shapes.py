@@ -20,6 +20,11 @@ class RectShape:
 	def update(self):
 		tl, tr, br, bl = [(m.corners[0] if m.corners is not None else None) for m in self.markers]
 		
+		# if markers have not moved, keep old position
+		if self.present and self.markers_present > 0 and not corners_moved([tl, tr, br, bl], self.corners):
+			return
+		
+		# calculate 4th corner if only 3 markers are present
 		if self.markers_present == 3:
 			if not self.markers[TOP_LEFT].present:
 				tl = br + (bl - br) + (tr - br)
@@ -72,6 +77,16 @@ class SingleShape:
 	
 	def __str__(self):
 		return "SingleShape({})".format(self.marker.id)
+
+def corners_moved(new_corners, old_corners, min_diff=2):
+	for i, corners in enumerate(new_corners):
+		if corners is not None:
+			diff = np.abs(old_corners[i] - corners).max()
+			if diff >= min_diff:
+				print("diff", diff)
+				return True
+	
+	return False
 
 def smooth_corners(new_corners, old_corners, min_diff=2):
 	if old_corners is None:
