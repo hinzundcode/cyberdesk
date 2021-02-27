@@ -1,6 +1,11 @@
 import numpy as np
 import time
 
+TOP_LEFT = 0
+TOP_RIGHT = 1
+BOTTOM_RIGHT = 2
+BOTTOM_LEFT = 3
+
 class RectShape:
 	def __init__(self, markers, smooth=True):
 		self.markers = markers
@@ -8,11 +13,25 @@ class RectShape:
 		self.present = False
 		self.smooth = smooth
 	
+	@property
+	def markers_present(self):
+		return sum(1 for marker in self.markers if marker.present)
+	
 	def update(self):
-		tl, tr, br, bl = self.markers
+		tl, tr, br, bl = [(m.corners[0] if m.corners is not None else None) for m in self.markers]
 		
-		if tl.present and tr.present and br.present and bl.present:
-			corners = np.array([tl.corners[0], tr.corners[0], br.corners[0], bl.corners[0]])
+		if self.markers_present == 3:
+			if not self.markers[TOP_LEFT].present:
+				tl = br + (bl - br) + (tr - br)
+			elif not self.markers[TOP_RIGHT].present:
+				tr = bl + (br - bl) + (tl - bl)
+			elif not self.markers[BOTTOM_LEFT].present:
+				bl = tr + (tl - tr) + (br - tr)
+			elif not self.markers[BOTTOM_RIGHT].present:
+				br = tl + (tr - tl) + (bl - tl)
+		
+		if self.markers_present == 3 or self.markers_present == 4:
+			corners = np.array([tl, tr, br, bl])
 			self.corners = smooth_corners(corners, self.corners) if self.smooth else corners
 			self.present = True
 		else:
