@@ -60,22 +60,34 @@ def create_texture(size, data=None, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8
 	
 	return texture
 
-def update_texture(texture, size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
+def update_texture(texture, size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV, size_unchanged=False):
 	glBindTexture(GL_TEXTURE_2D, texture)
-	update_current_texture(size, data, format=format, type=type)
+	update_current_texture(size, data, format=format, type=type, size_unchanged=size_unchanged)
 	glBindTexture(GL_TEXTURE_2D, 0)
 
-def update_current_texture(size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV):
-	glTexImage2D(
-		GL_TEXTURE_2D, # target
-		0, # level
-		GL_RGB,# internal format
-		*size, # width, height
-		0, # border
-		format, # format
-		type, # type
-		data # data
-	)
+def update_current_texture(size, data, format=GL_BGRA, type=GL_UNSIGNED_INT_8_8_8_8_REV, size_unchanged=False):
+	if size_unchanged:
+		glTexSubImage2D(
+			GL_TEXTURE_2D, # target
+			0, # level
+			0, # xoffset
+			0, # yoffset
+			*size, # width, height
+			format, # format
+			type, # type
+			data # data
+		)
+	else:
+		glTexImage2D(
+			GL_TEXTURE_2D, # target
+			0, # level
+			GL_RGB,# internal format
+			*size, # width, height
+			0, # border
+			format, # format
+			type, # type
+			data # data
+		)
 
 def destroy_texture(texture):
 	try:
@@ -97,9 +109,11 @@ class Texture:
 		self.size = size
 		self.format = format
 		self.type = type
+		self.size_initialized = False
 	
 	def update(self, data):
-		update_texture(self.texture, self.size, data, format=self.format, type=self.type)
+		update_texture(self.texture, self.size, data, format=self.format, type=self.type, size_unchanged=self.size_initialized)
+		self.size_initialized = True
 	
 	def draw(self, corners, uvs=[(0, 0), (0, 1), (1, 1), (1, 0)]):
 		draw_texture(self.texture, corners, uvs=uvs)

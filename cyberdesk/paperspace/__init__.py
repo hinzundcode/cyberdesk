@@ -91,7 +91,7 @@ class SingleShape:
 			if time.time() < self.ignore_absence_until:
 				self.present = True
 			else:
-				self.ignore_absence_until = False
+				self.ignore_absence_until = None
 	
 	def ignore_absence(self, seconds):
 		self.ignore_absence_until = time.time() + seconds
