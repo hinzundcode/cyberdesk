@@ -5,7 +5,7 @@ import math
 import _config as config
 from cyberdesk.calibration import load_calibration
 from cyberdesk.math import rect_corners
-from cyberdesk.graphics3d import create_texture, update_texture, draw_texture
+from cyberdesk.graphics3d import CanvasTexture, QuadGeometry, Material, quad_shader
 from cyberdesk.vision import detect_markers
 from cyberdesk.app import projection_main_loop, main_loop_config_args
 from cyberdesk import Color
@@ -24,15 +24,16 @@ def get_rightmost_corner(corners):
 			corner = c
 	return corner
 
-def draw(ctx, marker_corners, marker_ids):
+def draw(canvas, marker_corners, marker_ids):
+	ctx = canvas.ctx
 	ctx.set_source_rgba(0, 0, 0, 1)
-	ctx.rectangle(0, 0, *camera_size)
+	ctx.rectangle(0, 0, *canvas.size)
 	ctx.fill()
 	
 	if marker_ids is not None:
 		for i in range(len(marker_ids)):
 			marker_id = int(marker_ids[i][0])
-			corners = marker_corners[i][0]
+			corners = cv.perspectiveTransform(np.array([marker_corners[i][0]], dtype="float32"), perspective_transform)[0]
 			
 			ctx.set_source_rgb(*Color.BLUE)
 			ctx.set_line_width(10)
@@ -52,25 +53,21 @@ def draw(ctx, marker_corners, marker_ids):
 			ctx.show_text(str(marker_id))
 
 def setup():
-	projection_texture = create_texture(projection_size)
+	canvas = CanvasTexture(projection_size)
+	material = Material(shader=quad_shader(), texture=canvas.texture)
+	geometry = QuadGeometry(projection_rect)
 	
-	surface_data = np.empty(shape=camera_size, dtype=np.uint32)
-	surface = cairo.ImageSurface.create_for_data(surface_data, cairo.FORMAT_ARGB32, *camera_size)
-	ctx = cairo.Context(surface)
-	
-	return projection_texture, surface_data, ctx
+	return canvas, material, geometry
 
-def render(state, camera_frame_gray, **kwargs):
-	projection_texture, surface_data, ctx = state
+def render(state, camera_frame_gray, camera, **kwargs):
+	canvas, material, geometry = state
 	
 	marker_corners, marker_ids = detect_markers(camera_frame_gray)
 	
-	draw(ctx, marker_corners, marker_ids)
-	cv_in = surface_data.view("uint8").reshape((camera_size[1], camera_size[0], 4))
-	cv_out = cv.warpPerspective(cv_in, perspective_transform, projection_size)
+	draw(canvas, marker_corners, marker_ids)
 	
-	update_texture(projection_texture, projection_size, cv_out.view("uint32"))
-	draw_texture(projection_texture, projection_rect)
+	canvas.update()
+	camera.render(geometry, material)
 
 if __name__ == "__main__":
 	projection_main_loop(setup, render,
