@@ -7,6 +7,7 @@ class Space:
 		self.camera_size = camera_size
 		self.perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
 		self.current_camera_frame = None
+		self.camera = None
 	
 	def add_paper(self, paper_id, paper):
 		paper.space = self

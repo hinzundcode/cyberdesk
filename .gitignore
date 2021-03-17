@@ -1,3 +1,4 @@
+/env
 __pycache__
 /calibration.npz
 /_config.py

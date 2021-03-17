@@ -53,7 +53,10 @@ def line_intersection(a, b, c, d):
 	
 	coeffs = np.array([[ab[0], -cd[0]], [ab[1], -cd[1]]])
 	right = c-a
-	solution = np.linalg.solve(coeffs, right)
+	try:
+		solution = np.linalg.solve(coeffs, right)
+	except np.linalg.LinAlgError:
+		return None
 	
 	if 0 <= solution[0]  and solution[0] <= 1 and 0 <= solution[1] and solution[1] <= 1:
 		return a + ab*solution[0]

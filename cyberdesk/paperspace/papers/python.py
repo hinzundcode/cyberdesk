@@ -2,7 +2,7 @@ import numpy as np
 import OpenGL.GL as GL
 from cyberdesk.paperspace import Paper
 from cyberdesk.graphics2d import draw_text_centered, draw_text_multiline
-from cyberdesk.graphics3d import CanvasTexture
+from cyberdesk.graphics3d import CanvasTexture, Material, QuadGeometry, quad_shader
 import cyberdesk.graphics2d
 import cyberdesk.graphics3d
 import cyberdesk.math
@@ -45,6 +45,8 @@ class PythonPaper(Paper):
 		self.scope = None
 		self.exception = None
 		self.exception_canvas = CanvasTexture((400, 280))
+		self.exception_material = Material(shader=quad_shader(), texture=self.exception_canvas.texture)
+		self.exception_geometry = QuadGeometry()
 		self.initialized = False
 	
 	def show(self):
@@ -85,7 +87,9 @@ class PythonPaper(Paper):
 		
 		if self.exception is not None:
 			draw_exception(self.exception_canvas, self.exception)
-			self.exception_canvas.draw(self.space.project_corners(self.shape.corners))
+			self.exception_canvas.update()
+			self.exception_geometry.update_corners(self.space.project_corners(self.shape.corners))
+			self.space.camera.render(self.exception_geometry, self.exception_material)
 	
 	def hide(self):
 		if self.initialized:

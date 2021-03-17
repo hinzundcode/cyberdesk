@@ -1,10 +1,11 @@
+from OpenGL.GL import *
 import glfw
 import os
 import platform
 import cv2 as cv
 from datetime import datetime
 import time
-from cyberdesk.graphics3d import set_orthagonal_camera, clear_frame
+from cyberdesk.graphics3d import OrtographicCamera
 from cyberdesk.vision import get_camera_capture, get_camera_frame
 
 def try_maximize_window_osx():
@@ -83,6 +84,13 @@ def projection_main_loop(setup, render,
 			gamecontrollerdb = file.read()
 			glfw.update_gamepad_mappings(gamecontrollerdb)
 	
+	glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3) # 3.2 or 4.1
+	glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 2)
+	glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, 1)
+	glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
+	
+	#glfw.window_hint(glfw.RESIZABLE, False)
+	
 	window = glfw.create_window(*projection_size, "Projection", None, None)
 	if not window:
 		glfw.terminate()
@@ -102,7 +110,13 @@ def projection_main_loop(setup, render,
 
 	glfw.make_context_current(window)
 	
-	set_orthagonal_camera(projection_size)
+	print("Vendor:", glGetString(GL_VENDOR))
+	print("OpenGL Version:", glGetString(GL_VERSION))
+	print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
+	print("Renderer:", glGetString(GL_RENDERER))
+
+	camera = OrtographicCamera(0.0, *projection_size, 0, -1.0, 1.0)
+	framebuffer_rect = (0, 0, *glfw.get_framebuffer_size(window))
 	
 	state = setup()
 	
@@ -134,12 +148,14 @@ def projection_main_loop(setup, render,
 					frame_count = 0
 					fps_timer = now+1
 				
-				clear_frame()
+				camera.clear_frame(framebuffer_rect)
 				
 				render(state,
 					camera_frame=camera_frame,
 					camera_frame_gray=camera_frame_gray,
-					delta_time=delta_time)
+					camera=camera,
+					delta_time=delta_time,
+					window=window)
 			
 			glfw.swap_buffers(window)
 			glfw.poll_events()

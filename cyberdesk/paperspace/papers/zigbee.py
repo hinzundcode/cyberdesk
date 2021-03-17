@@ -2,7 +2,7 @@ import numpy as np
 import paho.mqtt.client as mqtt
 from enum import Enum
 import json
-from cyberdesk.graphics3d import draw_colored_rect
+from cyberdesk.graphics3d import QuadGeometry, color_quad_material
 from cyberdesk.paperspace import Paper
 from cyberdesk.math import centered_rect_corners, get_center, distance, line_center, rotation_from_corners
 from cyberdesk import Color
@@ -19,8 +19,13 @@ class ShortcutButton(Paper):
 		self.mqtt_host = mqtt_host
 		self.events = []
 		self.pressed = False
+		self.outer_geometry = None
+		self.inner_geometry = None
 	
 	def show(self):
+		self.outer_geometry = QuadGeometry()
+		self.inner_geometry = QuadGeometry()
+		
 		self.client = mqtt.Client()
 		self.client.on_connect = lambda client, userdata, flags, rc : self.on_connect()
 		self.client.on_message = lambda client, userdata, message : self.on_message(message)
@@ -68,11 +73,19 @@ class ShortcutButton(Paper):
 		
 		outer_rect = centered_rect_corners(position, (size+50, size+50), rotation=rotation)
 		inner_rect = centered_rect_corners(position, (size+20, size+20), rotation=rotation)
-		draw_colored_rect(self.space.project_corners(outer_rect), Color.RED if self.pressed else Color.BLUE)
-		draw_colored_rect(self.space.project_corners(inner_rect), Color.BLACK)
+		self.outer_geometry.update_corners(outer_rect)
+		self.inner_geometry.update_corners(inner_rect)
+		
+		if self.pressed:
+			self.space.camera.render(self.outer_geometry, color_quad_material(Color.RED))
+		else:
+			self.space.camera.render(self.outer_geometry, color_quad_material(Color.BLUE))
+		self.space.camera.render(self.inner_geometry, color_quad_material(Color.BLACK))
 	
 	def hide(self):
 		self.client.disconnect()
 		self.client.loop_stop()
 		self.client = None
 		self.pressed = False
+		self.outer_geometry = None
+		self.inner_geometry = None

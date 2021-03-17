@@ -75,6 +75,6 @@ class MarkerTracker:
 	def get_all(self, *marker_ids):
 		return list(map(self.get, marker_ids))
 
-def get_marker_images(*marker_ids):
+def get_marker_images(*marker_ids, size=200):
 	aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
-	return [aruco.drawMarker(aruco_dict, marker_id, 200) for marker_id in marker_ids]
+	return [aruco.drawMarker(aruco_dict, marker_id, size) for marker_id in marker_ids]

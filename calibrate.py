@@ -4,7 +4,8 @@ import cairo
 import _config as config
 from cyberdesk.math import rect_corners
 from cyberdesk.calibration import draw_chessboard
-from cyberdesk.graphics3d import create_texture, draw_texture
+from cyberdesk.graphics3d import Texture
+from cyberdesk.scenes import Material, QuadGeometry, quad_shader
 from cyberdesk.app import projection_main_loop, main_loop_config_args
 from cyberdesk import Color
 
@@ -26,14 +27,16 @@ def setup():
 	ctx = cairo.Context(surface)
 	draw_chessboard(ctx, projection_size)
 	
-	projection_texture = create_texture(projection_size, surface_data)
+	texture = Texture(projection_size, surface_data)
+	material = Material(shader=quad_shader(), texture=texture)
+	geometry = QuadGeometry(projection_rect)
 	
-	return projection_texture
+	return geometry, material
 
-def render(projection_texture, camera_frame, camera_frame_gray, **kwargs):
+def render(node, camera_frame, camera_frame_gray, camera, **kwargs):
 	global projection_corners_on_camera
 	
-	draw_texture(projection_texture, projection_rect)
+	camera.render(*node)
 	
 	chessboard_size = 6, 13
 	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)

@@ -4,7 +4,7 @@ import math
 from enum import IntEnum
 from cyberdesk.paperspace import Paper
 from cyberdesk.graphics2d import draw_text_centered
-from cyberdesk.graphics3d import CanvasTexture
+from cyberdesk.graphics3d import CanvasTexture, Material, quad_shader, QuadGeometry
 from cyberdesk.input import Gamepad, GamepadButton, GamepadAxis
 from cyberdesk import Color
 
@@ -106,11 +106,15 @@ class GamepadPaper(Paper):
 		self.gamepad_id = gamepad_id
 		self.gamepad = None
 		self.canvas = None
+		self.material = None
+		self.geometry = None
 	
 	def show(self):
 		self.gamepad = Gamepad(self.gamepad_id-1)
 		#self.canvas = CanvasTexture((400, 565))
 		self.canvas = CanvasTexture((400, 280))
+		self.material = Material(shader=quad_shader(), texture=self.canvas.texture)
+		self.geometry = QuadGeometry()
 	
 	def update(self):
 		self.gamepad.update()
@@ -133,8 +137,12 @@ class GamepadPaper(Paper):
 			text = "Gamepad {} disconnected".format(self.gamepad_id)
 			draw_text_centered(ctx, text, (0, 0), self.canvas.size, font_size=25)
 		
-		self.canvas.draw(self.space.project_corners(self.shape.corners))
+		self.canvas.update()
+		self.geometry.update_corners(self.space.project_corners(self.shape.corners))
+		self.space.camera.render(self.geometry, self.material)
 	
 	def hide(self):
 		self.gamepad = None
 		self.canvas = None
+		self.material = None
+		self.geometry = None

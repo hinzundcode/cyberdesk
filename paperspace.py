@@ -4,6 +4,7 @@ import _config as config
 from cyberdesk.calibration import load_calibration
 from cyberdesk.math import rect_corners
 from cyberdesk.vision import MarkerTracker, detect_markers
+from cyberdesk.graphics3d import OrtographicCamera
 from cyberdesk.app import projection_main_loop, main_loop_config_args
 from cyberdesk.paperspace import Space
 from cyberdesk.paperspace.shapes import RectShape, SingleShape
@@ -57,11 +58,12 @@ def setup():
 	
 	return markers, space
 
-def render(state, camera_frame, camera_frame_gray, **kwargs):
+def render(state, camera_frame, camera_frame_gray, camera, **kwargs):
 	markers, space = state
 	
 	markers.process_frame(*detect_markers(camera_frame_gray))
 	
+	space.camera = camera
 	space.current_camera_frame = camera_frame
 	
 	space.update()
