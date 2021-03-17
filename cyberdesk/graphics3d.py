@@ -192,40 +192,51 @@ class Material:
 		self.shader.__exit__(type, value, traceback)
 
 class Geometry:
-	def __init__(self, positions, texcoords, count, texcoords_size=2):
-		self.count = count
+	def __init__(self, positions, texcoords, indices, texcoords_size=2):
 		self.positions = positions
 		self.texcoords = texcoords
+		self.indices = indices
 		
 		self.vao = glGenVertexArrays(1)
 		glBindVertexArray(self.vao)
 		
-		self.position_buffer = glGenBuffers(1)
+		self.position_buffer, self.texcoord_buffer, self.index_buffer = glGenBuffers(3)
+		
 		glBindBuffer(GL_ARRAY_BUFFER, self.position_buffer)
 		glBufferData(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW)
 		glEnableVertexAttribArray(ATTRIBUTE_LOCATION_POSITIONS)
 		glVertexAttribPointer(ATTRIBUTE_LOCATION_POSITIONS, 2, GL_FLOAT, GL_FALSE, 0, None)
 		
-		self.texcoord_buffer = glGenBuffers(1)
 		glBindBuffer(GL_ARRAY_BUFFER, self.texcoord_buffer)
 		glBufferData(GL_ARRAY_BUFFER, texcoords, GL_STATIC_DRAW)
 		glEnableVertexAttribArray(ATTRIBUTE_LOCATION_TEXTUREUV)
 		glVertexAttribPointer(ATTRIBUTE_LOCATION_TEXTUREUV, texcoords_size, GL_FLOAT, GL_FALSE, 0, None)
 		
-		glBindBuffer(GL_ARRAY_BUFFER, 0)
-		glBindVertexArray(0)
-	
-	def update(self):
-		glBindBuffer(GL_ARRAY_BUFFER, self.position_buffer)
-		glBufferSubData(GL_ARRAY_BUFFER, 0, self.positions)
-		glBindBuffer(GL_ARRAY_BUFFER, 0)
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
 		
-		glBindBuffer(GL_ARRAY_BUFFER, self.texcoord_buffer)
-		glBufferSubData(GL_ARRAY_BUFFER, 0, self.texcoords)
+		glBindVertexArray(0)
 		glBindBuffer(GL_ARRAY_BUFFER, 0)
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+	
+	def update(self, positions=False, texcoords=False, indices=False):
+		if positions:
+			glBindBuffer(GL_ARRAY_BUFFER, self.position_buffer)
+			glBufferSubData(GL_ARRAY_BUFFER, 0, self.positions)
+			glBindBuffer(GL_ARRAY_BUFFER, 0)
+		
+		if texcoords:
+			glBindBuffer(GL_ARRAY_BUFFER, self.texcoord_buffer)
+			glBufferSubData(GL_ARRAY_BUFFER, 0, self.texcoords)
+			glBindBuffer(GL_ARRAY_BUFFER, 0)
+		
+		if indices:
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buffer)
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, self.indices)
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 	
 	def draw(self):
-		glDrawArrays(GL_TRIANGLES, 0, self.count)
+		glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, None)
 	
 	def __enter__(self):
 		glBindVertexArray(self.vao)
@@ -268,23 +279,24 @@ def default_shader():
 def rect_geometry():
 	positions = np.array([
 		0, 0,
-		0, 1,
 		1, 0,
-		1, 0,
-		0, 1,
 		1, 1,
+		0, 1,
 	], dtype=np.float32)
 
 	texcoords = np.array([
 		0, 0,
-		0, 1,
 		1, 0,
-		1, 0,
-		0, 1,
 		1, 1,
+		0, 1,
 	], dtype=np.float32)
 	
-	return Geometry(positions, texcoords, count=6)
+	indices = np.array([
+		0, 3, 1, # top left, bottom left, top right
+		1, 3, 2, # top right, bottom left, bottom right
+	], dtype=np.uint32)
+	
+	return Geometry(positions, texcoords, indices)
 
 # based on https://www.reedbeta.com/blog/quadrilateral-interpolation-part-1/
 class QuadGeometry(Geometry):
@@ -294,7 +306,12 @@ class QuadGeometry(Geometry):
 		
 		self.calculate_buffers()
 		
-		super().__init__(self.positions, self.texcoords, count=6, texcoords_size=3)
+		self.indices = np.array([
+			0, 3, 1, # top left, bottom left, top right
+			1, 3, 2, # top right, bottom left, bottom right
+		], dtype=np.uint32)
+		
+		super().__init__(self.positions, self.texcoords, self.indices, texcoords_size=3)
 	
 	def calculate_buffers(self):
 		corners = np.array(self.corners)
@@ -315,22 +332,13 @@ class QuadGeometry(Geometry):
 			(distances[3] + distances[1]) / distances[1],
 		]
 		
-		self.positions = np.array([
-			*corners[0], # top left
-			*corners[3], # bottom left
-			*corners[1], # top right
-			*corners[1], # top right
-			*corners[3], # bottom left
-			*corners[2], # bottom right
-		], dtype=np.float32)
+		self.positions = np.array(corners, dtype=np.float32)
 		
 		self.texcoords = np.array([
 			uvs[0][0]*q[0], uvs[0][1]*q[0], q[0],
-			uvs[3][0]*q[3], uvs[3][1]*q[3], q[3],
 			uvs[1][0]*q[1], uvs[1][1]*q[1], q[1],
-			uvs[1][0]*q[1], uvs[1][1]*q[1], q[1],
-			uvs[3][0]*q[3], uvs[3][1]*q[3], q[3],
 			uvs[2][0]*q[2], uvs[2][1]*q[2], q[2],
+			uvs[3][0]*q[3], uvs[3][1]*q[3], q[3],
 		], dtype=np.float32)
 	
 	def update_corners(self, corners, uvs=None):
@@ -338,11 +346,8 @@ class QuadGeometry(Geometry):
 		if uvs is not None:
 			self.uvs = uvs
 		
-		self.update()
-	
-	def update(self):
 		self.calculate_buffers()
-		super().update()
+		self.update(positions=True, texcoords=True)
 
 quad_vertex_shader_code = """
 #version 410
