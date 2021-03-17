@@ -4,8 +4,7 @@ import cairo
 import _config as config
 from cyberdesk.math import rect_corners
 from cyberdesk.calibration import draw_chessboard
-from cyberdesk.graphics3d import Texture
-from cyberdesk.scenes import Material, QuadGeometry, quad_shader
+from cyberdesk.graphics3d import Texture, Material, QuadGeometry, quad_shader
 from cyberdesk.app import projection_main_loop, main_loop_config_args
 from cyberdesk import Color
 
