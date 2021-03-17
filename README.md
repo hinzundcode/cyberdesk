@@ -21,14 +21,13 @@ camera_id = 0
 | Application | Screenshot |
 |-------------|------------|
 | paint.py | <img alt="paint.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/paint.png" width="300" /> |
-| laser-game.py | <img alt="laser-game.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/laser-game.jpg" width="300" /> |
 | detect-markers.py | <img alt="detect-markers.py screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/detect-markers.jpg" width="300" /> |
 
 ## paperspace
 
 <img alt="paperspace screenshot" src="https://raw.githubusercontent.com/hinzundcode/cyberdesk/master/screenshots/paperspace.jpg" width="300" />
 
-The standalone demos like `paint.py` or `laser-game.py` run in fullscreen and take the whole desk. Paperspace takes a different approach. It's an application that can run many different little programs at once.
+The standalone demos like `paint.py` or `detect-markers.py` run in fullscreen and take the whole desk. Paperspace takes a different approach. It's an application that can run many different little programs at once.
 
 Each program is represented by a piece of paper that you place on the table. Paperspace starts to execute that program as soon as it is visible and stops it when you take the paper away.
 
