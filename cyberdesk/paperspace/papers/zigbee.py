@@ -73,8 +73,8 @@ class ShortcutButton(Paper):
 		
 		outer_rect = centered_rect_corners(position, (size+50, size+50), rotation=rotation)
 		inner_rect = centered_rect_corners(position, (size+20, size+20), rotation=rotation)
-		self.outer_geometry.update_corners(outer_rect)
-		self.inner_geometry.update_corners(inner_rect)
+		self.outer_geometry.update_corners(self.space.project_corners(outer_rect))
+		self.inner_geometry.update_corners(self.space.project_corners(inner_rect))
 		
 		if self.pressed:
 			self.space.camera.render(self.outer_geometry, color_quad_material(Color.RED))
