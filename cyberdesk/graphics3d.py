@@ -3,7 +3,7 @@ import numpy as np
 import cairo
 from PIL import Image
 from cyberdesk.math import line_intersection, distance
-from functools import lru_cache, cached_property
+from functools import cache, lru_cache, cached_property
 
 ATTRIBUTE_LOCATION_POSITIONS = 0
 ATTRIBUTE_LOCATION_TEXTUREUV = 1
@@ -104,9 +104,11 @@ class Shader:
 			self.program = None
 			raise Exception("program link error: " + str(error))
 	
+	@cache
 	def uniform_location(self, name):
 		return glGetUniformLocation(self.program, name)
 	
+	@cache
 	def attrib_location(self, name):
 		return glGetAttribLocation(self.program, name)
 	
@@ -273,11 +275,11 @@ void main() {
 }
 """
 
-@lru_cache(maxsize=None)
+@cache
 def default_shader():
 	return Shader(default_vertex_shader_code, default_fragment_shader_code)
 
-@lru_cache(maxsize=None)
+@cache
 def rect_geometry():
 	positions = np.array([
 		0, 0,
@@ -377,7 +379,7 @@ void main() {
 }
 """
 
-@lru_cache(maxsize=None)
+@cache
 def quad_shader():
 	return Shader(quad_vertex_shader_code, quad_fragment_shader_code)
 
@@ -409,7 +411,7 @@ def corners_to_uvs(corners, size):
 		(corners[3][0] / size[0], corners[3][1] / size[1]),
 	]
 
-@lru_cache(maxsize=None)
+@cache
 def default_texture():
 	return Texture((1, 1), np.array([0xFF, 0xFF, 0xFF, 0xFF], dtype=np.uint8),
 		format=GL_RGB, type=GL_UNSIGNED_BYTE, internal_format=GL_RGB)
