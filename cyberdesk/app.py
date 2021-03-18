@@ -73,11 +73,142 @@ def save_screenshot(frame):
 	cv.imwrite(filename, frame)
 	print("took a screenshot! "+filename)
 
-def projection_main_loop(setup, render,
-	projection_size=(1280, 720), camera_size=(1280, 720),
-	monitor_name=None, maximize_window=True, camera_id=0):
+class Window:
+	def __init__(self, setup, render, size, title="Window", monitor=None, maximize=True):
+		self.setup = setup
+		self.render = render
+		self.size = size
+		self.title = title
+		self.monitor = monitor
+		self.maximize = maximize
+	
+	def show(self):
+		self.window = glfw.create_window(*self.size, self.title, None, None)
+		if not self.window:
+			raise Exception("can't create window")
+		
+		glfw.set_key_callback(self.window, self.on_key)
+		
+		self.wait_until_window_maximized = False
+		
+		if self.monitor != None:
+			moved = move_window_to_monitor(self.window, self.monitor)
+			if moved and self.maximize:
+				self.wait_until_window_maximized = True
+		
+		glfw.make_context_current(self.window)
+		
+		print("Vendor:", glGetString(GL_VENDOR))
+		print("OpenGL Version:", glGetString(GL_VERSION))
+		print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
+		print("Renderer:", glGetString(GL_RENDERER))
+		
+		self.camera = OrtographicCamera(0.0, *self.size, 0, -1.0, 1.0)
+		self.framebuffer_rect = (0, 0, *glfw.get_framebuffer_size(self.window))
+		self.state = self.setup()
+	
+	def on_key(self, window, key, scancode, action, mods):
+		if key in [glfw.KEY_Q, glfw.KEY_ESCAPE]:
+			glfw.set_window_should_close(self.window, True)
+	
+	def update(self):
+		if glfw.window_should_close(self.window):
+			return False
+		
+		if self.wait_until_window_maximized:
+			if try_maximize_window():
+				self.wait_until_window_maximized = False
+		
+		try:
+			# wait until window is open and maximized
+			if not self.wait_until_window_maximized:
+				self.camera.clear_frame(self.framebuffer_rect)
+				self.render(self.state,
+					camera=self.camera,
+					window=self.window)
+			
+			glfw.swap_buffers(self.window)
+			glfw.poll_events()
+		except KeyboardInterrupt:
+			glfw.set_window_should_close(self.window, True)
+		
+		return True
+
+class CameraCapture:
+	def __init__(self, camera_size, camera_id):
+		self.camera_size = camera_size
+		self.camera_id = camera_id
+		self.capture = None
+	
+	def setup(self, fn):
+		def decorator():
+			self.capture = get_camera_capture(*self.camera_size, camera_id=self.camera_id)
+			return fn()
+		
+		return decorator
+	
+	def render(self, fn):
+		def decorator(state, **kwargs):
+			camera_frame, camera_frame_gray = get_camera_frame(self.capture)
+			return fn(state,
+				camera_frame=camera_frame,
+				camera_frame_gray=camera_frame_gray,
+				**kwargs)
+		
+		return decorator
+	
+	def __del__(self):
+		if self.capture != None:
+			self.capture.release()
+
+class Timer:
+	def __init__(self):
+		self.frame_before = None
+	
+	def setup(self, fn):
+		return fn
+	
+	def render(self, fn):
+		def decorator(state, **kwargs):
+			frame_start = time.time()
+			delta_time = frame_start - self.frame_before if self.frame_before != None else 0
+			self.frame_before = frame_start
+			
+			return fn(state,
+				frame_start=frame_start,
+				delta_time=delta_time,
+				**kwargs)
+		
+		return decorator
+
+class FPSCounter:
+	def __init__(self):
+		self.frame_count = 0
+		self.fps_timer = None
+	
+	def setup(self, fn):
+		return fn
+	
+	def render(self, fn):
+		def decorator(state, frame_start, **kwargs):
+			if self.fps_timer == None:
+				self.fps_timer = frame_start+1
+			
+			self.frame_count += 1
+			if frame_start > self.fps_timer:
+				print("fps:", self.frame_count)
+				self.frame_count = 0
+				self.fps_timer = frame_start+1
+			
+			return fn(state,
+				frame_start=frame_start,
+				**kwargs)
+		
+		return decorator
+
+def main_loop(window):
 	if not glfw.init():
-		return
+		raise Exception("can't initialize glfw")
 	
 	if os.path.exists("gamecontrollerdb.txt"):
 		with open("gamecontrollerdb.txt", "r") as file:
@@ -89,84 +220,43 @@ def projection_main_loop(setup, render,
 	glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, 1)
 	glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 	
-	#glfw.window_hint(glfw.RESIZABLE, False)
+	window.show()
 	
-	window = glfw.create_window(*projection_size, "Projection", None, None)
-	if not window:
-		glfw.terminate()
-		return
-	
-	def on_key(window, key, scancode, action, mods):
-		if key in [glfw.KEY_Q, glfw.KEY_ESCAPE]:
-			glfw.set_window_should_close(window, True)
-	glfw.set_key_callback(window, on_key)
-	
-	wait_until_window_maximized = False
-	
-	if monitor_name != None:
-		moved = move_window_to_monitor(window, monitor_name)
-		if moved and maximize_window:
-			wait_until_window_maximized = True
-
-	glfw.make_context_current(window)
-	
-	print("Vendor:", glGetString(GL_VENDOR))
-	print("OpenGL Version:", glGetString(GL_VERSION))
-	print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
-	print("Renderer:", glGetString(GL_RENDERER))
-
-	camera = OrtographicCamera(0.0, *projection_size, 0, -1.0, 1.0)
-	framebuffer_rect = (0, 0, *glfw.get_framebuffer_size(window))
-	
-	state = setup()
-	
-	cap = get_camera_capture(*camera_size, camera_id=camera_id)
-	
-	start_time = time.time()
-	frame_before = None
-	frame_count = 0
-	fps_timer = time.time()+1
-
-	took_screenshot = False
-	while not glfw.window_should_close(window):
-		if wait_until_window_maximized:
-			if try_maximize_window():
-				wait_until_window_maximized = False
-		
-		try:
-			# wait until window is open and maximized
-			if not wait_until_window_maximized:
-				camera_frame, camera_frame_gray = get_camera_frame(cap)
-				
-				now = time.time()
-				delta_time = now - frame_before if frame_before != None else 0
-				frame_before = now
-				
-				frame_count += 1
-				if now > fps_timer:
-					print("fps:", frame_count)
-					frame_count = 0
-					fps_timer = now+1
-				
-				camera.clear_frame(framebuffer_rect)
-				
-				render(state,
-					camera_frame=camera_frame,
-					camera_frame_gray=camera_frame_gray,
-					camera=camera,
-					delta_time=delta_time,
-					window=window)
-			
-			glfw.swap_buffers(window)
-			glfw.poll_events()
-			
-			if glfw.get_key(window, glfw.KEY_S):
-				if not took_screenshot:
-					save_screenshot(camera_frame)
-					took_screenshot = True
-			else:
-				took_screenshot = False
-		except KeyboardInterrupt:
-			glfw.set_window_should_close(window, True)
+	while window.update():
+		pass
 	
 	glfw.terminate()
+
+def setup_stack(stack):
+	def decorator(fn):
+		for component in reversed(stack):
+			fn = component.setup(fn)
+		return fn
+	
+	return decorator
+
+def render_stack(stack):
+	def decorator(fn):
+		for component in reversed(stack):
+			fn = component.render(fn)
+		return fn
+	
+	return decorator
+
+def projection_main_loop(setup, render,
+	projection_size=(1280, 720), camera_size=(1280, 720),
+	monitor_name=None, maximize_window=True, camera_id=0):
+	
+	capture = CameraCapture(camera_size, camera_id)
+	timer = Timer()
+	fps_counter = FPSCounter()
+	
+	stack = [capture, timer, fps_counter]
+	setup = setup_stack(stack, setup)
+	render = render_stack(stack, render)
+	
+	window = Window(setup, render,
+		size=projection_size, title="Projection",
+		monitor=monitor_name, maximize=maximize_window)
+	
+	main_loop(window)
