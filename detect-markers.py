@@ -52,7 +52,7 @@ def draw(canvas, marker_corners, marker_ids):
 			ctx.move_to(*get_rightmost_corner(corners) + np.array([10, 0]))
 			ctx.show_text(str(marker_id))
 
-def setup():
+def setup(**kwargs):
 	canvas = CanvasTexture(projection_size)
 	material = Material(shader=quad_shader(), texture=canvas.texture)
 	geometry = QuadGeometry(projection_rect)

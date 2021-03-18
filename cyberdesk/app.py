@@ -5,7 +5,7 @@ import platform
 import cv2 as cv
 from datetime import datetime
 import time
-from cyberdesk.graphics3d import OrtographicCamera
+from cyberdesk.graphics3d import OrtographicCamera, ortographic_camera_params
 from cyberdesk.vision import get_camera_capture, get_camera_frame
 
 def try_maximize_window_osx():
@@ -74,15 +74,19 @@ def save_screenshot(frame):
 	print("took a screenshot! "+filename)
 
 class Window:
-	def __init__(self, setup, render, size, title="Window", monitor=None, maximize=True):
+	def __init__(self, setup, render, size, title="Window", monitor=None, maximize=True, resizable=False):
 		self.setup = setup
 		self.render = render
 		self.size = size
 		self.title = title
 		self.monitor = monitor
 		self.maximize = maximize
+		self.resizable = resizable
+		self.framebuffer_size = size
 	
 	def show(self):
+		glfw.window_hint(glfw.RESIZABLE, self.resizable)
+		
 		self.window = glfw.create_window(*self.size, self.title, None, None)
 		if not self.window:
 			raise Exception("can't create window")
@@ -103,9 +107,7 @@ class Window:
 		print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
 		print("Renderer:", glGetString(GL_RENDERER))
 		
-		self.camera = OrtographicCamera(0.0, *self.size, 0, -1.0, 1.0)
-		self.framebuffer_rect = (0, 0, *glfw.get_framebuffer_size(self.window))
-		self.state = self.setup()
+		self.state = self.setup(window=self)
 	
 	def on_key(self, window, key, scancode, action, mods):
 		if key in [glfw.KEY_Q, glfw.KEY_ESCAPE]:
@@ -122,10 +124,9 @@ class Window:
 		try:
 			# wait until window is open and maximized
 			if not self.wait_until_window_maximized:
-				self.camera.clear_frame(self.framebuffer_rect)
+				self.framebuffer_size = glfw.get_framebuffer_size(self.window)
 				self.render(self.state,
-					camera=self.camera,
-					window=self.window)
+					window=self)
 			
 			glfw.swap_buffers(self.window)
 			glfw.poll_events()
@@ -141,9 +142,9 @@ class CameraCapture:
 		self.capture = None
 	
 	def setup(self, fn):
-		def decorator():
+		def decorator(**kwargs):
 			self.capture = get_camera_capture(*self.camera_size, camera_id=self.camera_id)
-			return fn()
+			return fn(**kwargs)
 		
 		return decorator
 	
@@ -206,6 +207,28 @@ class FPSCounter:
 		
 		return decorator
 
+class WindowCamera:
+	def setup(self, fn):
+		def decorator(window, **kwargs):
+			self.camera = OrtographicCamera(*ortographic_camera_params(window.framebuffer_size))
+			return fn(window=window,
+				camera=self.camera,
+				**kwargs)
+		
+		return decorator
+	
+	def render(self, fn):
+		def decorator(state, window, **kwargs):
+			self.camera.update(*ortographic_camera_params(window.framebuffer_size))
+			self.camera.clear_frame()
+			
+			return fn(state,
+				window=window,
+				camera=self.camera,
+				**kwargs)
+		
+		return decorator
+
 def main_loop(window):
 	if not glfw.init():
 		raise Exception("can't initialize glfw")
@@ -219,6 +242,7 @@ def main_loop(window):
 	glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 2)
 	glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, 1)
 	glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
+	glfw.window_hint(glfw.COCOA_RETINA_FRAMEBUFFER, False)
 	
 	window.show()
 	
@@ -250,10 +274,11 @@ def projection_main_loop(setup, render,
 	capture = CameraCapture(camera_size, camera_id)
 	timer = Timer()
 	fps_counter = FPSCounter()
+	camera = WindowCamera()
 	
-	stack = [capture, timer, fps_counter]
-	setup = setup_stack(stack, setup)
-	render = render_stack(stack, render)
+	stack = [capture, timer, fps_counter, camera]
+	setup = setup_stack(stack)(setup)
+	render = render_stack(stack)(render)
 	
 	window = Window(setup, render,
 		size=projection_size, title="Projection",

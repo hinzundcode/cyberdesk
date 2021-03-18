@@ -19,7 +19,7 @@ def draw_cv_polygon(frame, corners, color=Color.GREEN):
 	cv.polylines(frame, [pts], True, color)
 	return frame
 
-def setup():
+def setup(**kwargs):
 	surface_data = np.empty(shape=projection_size, dtype=np.uint32)
 	surface = cairo.ImageSurface.create_for_data(surface_data, cairo.FORMAT_ARGB32, *projection_size)
 	

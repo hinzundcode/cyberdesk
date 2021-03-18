@@ -44,7 +44,7 @@ def draw(ctx, marker_corners, marker_ids):
 				ctx.arc(*get_center(corners), radius, 0, 2*math.pi)
 				ctx.fill()
 
-def setup():
+def setup(**kwargs):
 	canvas = CanvasTexture(projection_size)
 	material = Material(shader=quad_shader(), texture=canvas.texture)
 	geometry = QuadGeometry(projection_rect)

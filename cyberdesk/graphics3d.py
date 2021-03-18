@@ -3,7 +3,7 @@ import numpy as np
 import cairo
 from PIL import Image
 from cyberdesk.math import line_intersection, distance
-from functools import cache, lru_cache, cached_property
+from functools import cache, lru_cache
 
 ATTRIBUTE_LOCATION_POSITIONS = 0
 ATTRIBUTE_LOCATION_TEXTUREUV = 1
@@ -122,28 +122,38 @@ class Shader:
 		if self.program != None:
 			glDeleteProgram(self.program)
 
+def ortographic_camera_params(size):
+	return 0, *size, 0, -1.0, 1.0
+
 class OrtographicCamera:
 	def __init__(self, l, r, b, t, n, f, background_color=(0, 0, 0, 1)):
+		self.update(l, r, b, t, n, f)
+		self.background_color = background_color
+	
+	def update(self, l, r, b, t, n, f):
 		self.l = l
 		self.r = r
 		self.b = b
 		self.t = t
 		self.n = n
 		self.f = f
-		
-		self.background_color = background_color
+		self.rect = (self.l, self.t, self.r - self.l, self.b - self.t)
+		self.camera_matrix = None
 	
-	@cached_property
+	@property
 	def matrix(self):
-		return np.array([
-			[2/(self.r-self.l), 0, 0, 0],
-			[0, 2/(self.t-self.b), 0, 0],
-			[0, 0, 2/(self.n-self.f), 0],
-			[(self.l+self.r)/(self.l-self.r), (self.b+self.t)/(self.b-self.t), (self.n+self.f)/(self.n-self.f), 1],
-		], dtype=np.float32)
+		if self.camera_matrix is None:
+			self.camera_matrix = np.array([
+				[2/(self.r-self.l), 0, 0, 0],
+				[0, 2/(self.t-self.b), 0, 0],
+				[0, 0, 2/(self.n-self.f), 0],
+				[(self.l+self.r)/(self.l-self.r), (self.b+self.t)/(self.b-self.t), (self.n+self.f)/(self.n-self.f), 1],
+			], dtype=np.float32)
+		
+		return self.camera_matrix
 	
-	def clear_frame(self, framebuffer_rect):
-		glViewport(*framebuffer_rect)
+	def clear_frame(self):
+		glViewport(*self.rect)
 		
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 		glEnable(GL_BLEND)
