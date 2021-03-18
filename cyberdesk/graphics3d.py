@@ -152,10 +152,13 @@ class OrtographicCamera:
 		glDepthFunc(GL_LEQUAL)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	
-	def render(self, geometry, material):
+	def render(self, geometry, material, matrix=None):
+		if matrix is None:
+			matrix = self.matrix
+		
 		with material:
 			with geometry:
-				glUniformMatrix4fv(material.shader.uniform_location("projection"), 1, GL_FALSE, self.matrix)
+				glUniformMatrix4fv(material.shader.uniform_location("matrix"), 1, GL_FALSE, matrix)
 				geometry.draw()
 
 class Material:
@@ -248,13 +251,12 @@ default_vertex_shader_code = """
 #version 410
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec2 texcoord;
-uniform mat4 projection;
 uniform mat4 matrix;
 out vec2 uv;
 
 void main()
 {
-	gl_Position = projection * matrix * position;
+	gl_Position = matrix * position;
 	uv = texcoord;
 }
 """
@@ -353,12 +355,12 @@ quad_vertex_shader_code = """
 #version 410
 layout(location = 0) in vec4 position;
 layout(location = 1) in vec3 texcoord;
-uniform mat4 projection;
+uniform mat4 matrix;
 out vec3 uvq;
 
 void main()
 {
-	gl_Position = projection * position;
+	gl_Position = matrix * position;
 	uvq = texcoord;
 }
 """
