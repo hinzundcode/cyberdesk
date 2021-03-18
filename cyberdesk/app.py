@@ -81,7 +81,7 @@ class Window:
 		self.title = title
 		self.monitor = monitor
 		self.maximize = maximize
-		self.resizable = resizable
+		self.resizable = resizable or maximize
 		self.framebuffer_size = size
 	
 	def show(self):
