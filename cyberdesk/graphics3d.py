@@ -7,6 +7,7 @@ from functools import lru_cache, cached_property
 
 ATTRIBUTE_LOCATION_POSITIONS = 0
 ATTRIBUTE_LOCATION_TEXTUREUV = 1
+UNIFORM_LOCATION_MATRIX = 0
 
 class Texture:
 	def __init__(self, size, data=None,
@@ -158,7 +159,7 @@ class OrtographicCamera:
 		
 		with material:
 			with geometry:
-				glUniformMatrix4fv(material.shader.uniform_location("matrix"), 1, GL_FALSE, matrix)
+				glUniformMatrix4fv(UNIFORM_LOCATION_MATRIX, 1, GL_FALSE, matrix)
 				geometry.draw()
 
 class Material:
