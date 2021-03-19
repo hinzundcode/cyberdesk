@@ -7,6 +7,8 @@ from datetime import datetime
 import time
 from cyberdesk.graphics3d import OrtographicCamera, ortographic_camera_params
 from cyberdesk.vision import get_camera_capture, get_camera_frame
+from cyberdesk.calibration import load_calibration as do_load_calibration
+from cyberdesk.math import rect_corners
 
 def try_maximize_window_osx():
 	try:
@@ -73,16 +75,33 @@ def save_screenshot(frame):
 	cv.imwrite(filename, frame)
 	print("took a screenshot! "+filename)
 
+class FPSCounter:
+	def __init__(self):
+		self.frame_count = 0
+		self.fps_timer = None
+	
+	def update(self, frame_start):
+		if self.fps_timer == None:
+			self.fps_timer = frame_start+1
+		
+		self.frame_count += 1
+		if frame_start > self.fps_timer:
+			print("fps:", self.frame_count)
+			self.frame_count = 0
+			self.fps_timer = frame_start+1
+
 class Window:
-	def __init__(self, setup, render, size, title="Window", monitor=None, maximize=True, resizable=False):
+	def __init__(self, setup, size, title="Window", monitor=None, maximize=True, resizable=False):
 		self.setup = setup
-		self.render = render
+		self.render = None
 		self.size = size
 		self.title = title
 		self.monitor = monitor
 		self.maximize = maximize
 		self.resizable = resizable or maximize
 		self.framebuffer_size = size
+		self.frame_before = None
+		self.fps_counter = FPSCounter()
 	
 	def show(self):
 		glfw.window_hint(glfw.RESIZABLE, self.resizable)
@@ -107,7 +126,7 @@ class Window:
 		print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
 		print("Renderer:", glGetString(GL_RENDERER))
 		
-		self.state = self.setup(window=self)
+		self.render = self.setup(window=self)
 	
 	def on_key(self, window, key, scancode, action, mods):
 		if key in [glfw.KEY_Q, glfw.KEY_ESCAPE]:
@@ -125,8 +144,7 @@ class Window:
 			# wait until window is open and maximized
 			if not self.wait_until_window_maximized:
 				self.framebuffer_size = glfw.get_framebuffer_size(self.window)
-				self.render(self.state,
-					window=self)
+				self.render_content()
 			
 			glfw.swap_buffers(self.window)
 			glfw.poll_events()
@@ -134,102 +152,19 @@ class Window:
 			glfw.set_window_should_close(self.window, True)
 		
 		return True
+	
+	def render_content(self):
+		frame_start = time.time()
+		delta_time = frame_start - self.frame_before if self.frame_before != None else 0
+		self.frame_before = frame_start
+		
+		self.fps_counter.update(frame_start)
+		
+		self.render(frame_start=frame_start,
+			delta_time=delta_time,
+			window=self)
 
-class CameraCapture:
-	def __init__(self, camera_size, camera_id):
-		self.camera_size = camera_size
-		self.camera_id = camera_id
-		self.capture = None
-	
-	def setup(self, fn):
-		def decorator(**kwargs):
-			self.capture = get_camera_capture(*self.camera_size, camera_id=self.camera_id)
-			return fn(**kwargs)
-		
-		return decorator
-	
-	def render(self, fn):
-		def decorator(state, **kwargs):
-			camera_frame, camera_frame_gray = get_camera_frame(self.capture)
-			return fn(state,
-				camera_frame=camera_frame,
-				camera_frame_gray=camera_frame_gray,
-				**kwargs)
-		
-		return decorator
-	
-	def __del__(self):
-		if self.capture != None:
-			self.capture.release()
-
-class Timer:
-	def __init__(self):
-		self.frame_before = None
-	
-	def setup(self, fn):
-		return fn
-	
-	def render(self, fn):
-		def decorator(state, **kwargs):
-			frame_start = time.time()
-			delta_time = frame_start - self.frame_before if self.frame_before != None else 0
-			self.frame_before = frame_start
-			
-			return fn(state,
-				frame_start=frame_start,
-				delta_time=delta_time,
-				**kwargs)
-		
-		return decorator
-
-class FPSCounter:
-	def __init__(self):
-		self.frame_count = 0
-		self.fps_timer = None
-	
-	def setup(self, fn):
-		return fn
-	
-	def render(self, fn):
-		def decorator(state, frame_start, **kwargs):
-			if self.fps_timer == None:
-				self.fps_timer = frame_start+1
-			
-			self.frame_count += 1
-			if frame_start > self.fps_timer:
-				print("fps:", self.frame_count)
-				self.frame_count = 0
-				self.fps_timer = frame_start+1
-			
-			return fn(state,
-				frame_start=frame_start,
-				**kwargs)
-		
-		return decorator
-
-class WindowCamera:
-	def setup(self, fn):
-		def decorator(window, **kwargs):
-			self.camera = OrtographicCamera(*ortographic_camera_params(window.framebuffer_size))
-			return fn(window=window,
-				camera=self.camera,
-				**kwargs)
-		
-		return decorator
-	
-	def render(self, fn):
-		def decorator(state, window, **kwargs):
-			self.camera.update(*ortographic_camera_params(window.framebuffer_size))
-			self.camera.clear_frame()
-			
-			return fn(state,
-				window=window,
-				camera=self.camera,
-				**kwargs)
-		
-		return decorator
-
-def main_loop(window):
+def run(window):
 	if not glfw.init():
 		raise Exception("can't initialize glfw")
 	
@@ -251,37 +186,63 @@ def main_loop(window):
 	
 	glfw.terminate()
 
-def setup_stack(stack):
+def projection(*args, **kwargs):
+	import _config as config
+	
+	if len(args) == 1 and callable(args[0]):
+		return create_projection_window(args[0], **main_loop_config_args(config))
+	else:
+		def decorator(setup):
+			return create_projection_window(setup, *args, **kwargs, **main_loop_config_args(config))
+		return decorator
+
+def window(**kwargs):
 	def decorator(fn):
-		for component in reversed(stack):
-			fn = component.setup(fn)
-		return fn
+		return Window(fn, **kwargs)
 	
 	return decorator
 
-def render_stack(stack):
-	def decorator(fn):
-		for component in reversed(stack):
-			fn = component.render(fn)
-		return fn
-	
-	return decorator
-
-def projection_main_loop(setup, render,
+def create_projection_window(setup,
 	projection_size=(1280, 720), camera_size=(1280, 720),
-	monitor_name=None, maximize_window=True, camera_id=0):
+	monitor_name=None, maximize_window=True, camera_id=0,
+	load_calibration=True):
 	
-	capture = CameraCapture(camera_size, camera_id)
-	timer = Timer()
-	fps_counter = FPSCounter()
-	camera = WindowCamera()
+	projection_rect = rect_corners(size=projection_size)
 	
-	stack = [capture, timer, fps_counter, camera]
-	setup = setup_stack(stack)(setup)
-	render = render_stack(stack)(render)
+	if load_calibration:
+		projection_corners_on_camera = do_load_calibration()["projection_corners_on_camera"]
+		perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
+	else:
+		perspective_transform = None
 	
-	window = Window(setup, render,
+	def setup_decorator(window, **kwargs):
+		capture = get_camera_capture(*camera_size, camera_id=camera_id)
+		camera = OrtographicCamera(*ortographic_camera_params(window.framebuffer_size))
+		
+		context = dict(
+			projection_size=projection_size,
+			camera_size=camera_size,
+			projection_rect=projection_rect,
+			perspective_transform=perspective_transform,
+			camera=camera,
+		)
+		
+		render = setup(window=window, **context, **kwargs)
+		
+		def render_decorator(**kwargs):
+			camera_frame, camera_frame_gray = get_camera_frame(capture)
+			
+			camera.update(*ortographic_camera_params(window.framebuffer_size))
+			camera.clear_frame()
+			
+			return render(
+				camera_frame=camera_frame,
+				camera_frame_gray=camera_frame_gray,
+				**context,
+				**kwargs)
+		
+		return render_decorator
+	
+	return Window(setup_decorator,
 		size=projection_size, title="Projection",
 		monitor=monitor_name, maximize=maximize_window)
-	
-	main_loop(window)

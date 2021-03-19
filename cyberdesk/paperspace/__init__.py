@@ -2,10 +2,10 @@ import numpy as np
 import cv2 as cv
 
 class Space:
-	def __init__(self, projection_corners_on_camera, camera_size, projection_rect):
+	def __init__(self, camera_size, perspective_transform):
 		self.papers = {}
 		self.camera_size = camera_size
-		self.perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
+		self.perspective_transform = perspective_transform
 		self.current_camera_frame = None
 		self.camera = None
 	

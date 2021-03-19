@@ -2,20 +2,10 @@ import numpy as np
 import cv2 as cv
 import cairo
 import math
-import _config as config
-from cyberdesk.calibration import load_calibration
-from cyberdesk.math import rect_corners
 from cyberdesk.graphics3d import CanvasTexture, QuadGeometry, Material, quad_shader
 from cyberdesk.vision import detect_markers
-from cyberdesk.app import projection_main_loop, main_loop_config_args
+from cyberdesk.app import projection, run
 from cyberdesk import Color
-
-projection_corners_on_camera = load_calibration()["projection_corners_on_camera"]
-camera_size = config.camera_size
-projection_size = config.projection_size
-projection_rect = rect_corners(size=projection_size)
-
-perspective_transform = cv.getPerspectiveTransform(projection_corners_on_camera, projection_rect)
 
 def get_rightmost_corner(corners):
 	corner = corners[0]
@@ -24,7 +14,7 @@ def get_rightmost_corner(corners):
 			corner = c
 	return corner
 
-def draw(canvas, marker_corners, marker_ids):
+def draw(canvas, marker_corners, marker_ids, perspective_transform):
 	ctx = canvas.ctx
 	ctx.set_source_rgba(0, 0, 0, 1)
 	ctx.rectangle(0, 0, *canvas.size)
@@ -52,23 +42,21 @@ def draw(canvas, marker_corners, marker_ids):
 			ctx.move_to(*get_rightmost_corner(corners) + np.array([10, 0]))
 			ctx.show_text(str(marker_id))
 
-def setup(**kwargs):
+@projection
+def markers(projection_size, projection_rect, perspective_transform, **kwargs):
 	canvas = CanvasTexture(projection_size)
 	material = Material(shader=quad_shader(), texture=canvas.texture)
 	geometry = QuadGeometry(projection_rect)
 	
-	return canvas, material, geometry
-
-def render(state, camera_frame_gray, camera, **kwargs):
-	canvas, material, geometry = state
+	def render(camera, camera_frame_gray, **kwargs):
+		marker_corners, marker_ids = detect_markers(camera_frame_gray)
+		
+		draw(canvas, marker_corners, marker_ids, perspective_transform)
+		
+		canvas.update()
+		camera.render(geometry, material)
 	
-	marker_corners, marker_ids = detect_markers(camera_frame_gray)
-	
-	draw(canvas, marker_corners, marker_ids)
-	
-	canvas.update()
-	camera.render(geometry, material)
+	return render
 
 if __name__ == "__main__":
-	projection_main_loop(setup, render,
-		**main_loop_config_args(config))
+	run(markers)

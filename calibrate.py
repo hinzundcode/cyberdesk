@@ -1,17 +1,10 @@
 import numpy as np
 import cv2 as cv
 import cairo
-import _config as config
-from cyberdesk.math import rect_corners
 from cyberdesk.calibration import draw_chessboard
-from cyberdesk.graphics3d import Texture, Material, QuadGeometry, quad_shader
-from cyberdesk.app import projection_main_loop, main_loop_config_args
+from cyberdesk.graphics3d import CanvasTexture, Material, QuadGeometry, quad_shader
+from cyberdesk.app import projection, run
 from cyberdesk import Color
-
-camera_size = config.camera_size
-projection_size = config.projection_size
-projection_rect = rect_corners(size=projection_size)
-projection_corners_on_camera = None
 
 def draw_cv_polygon(frame, corners, color=Color.GREEN):
 	corners = np.array(corners, dtype=np.int32)
@@ -19,64 +12,61 @@ def draw_cv_polygon(frame, corners, color=Color.GREEN):
 	cv.polylines(frame, [pts], True, color)
 	return frame
 
-def setup(**kwargs):
-	surface_data = np.empty(shape=projection_size, dtype=np.uint32)
-	surface = cairo.ImageSurface.create_for_data(surface_data, cairo.FORMAT_ARGB32, *projection_size)
+@projection(load_calibration=False)
+def calibration(projection_size, projection_rect, **kwargs):
+	canvas = CanvasTexture(projection_size)
+	draw_chessboard(canvas.ctx, projection_size)
+	canvas.update()
 	
-	ctx = cairo.Context(surface)
-	draw_chessboard(ctx, projection_size)
-	
-	texture = Texture(projection_size, surface_data)
-	material = Material(shader=quad_shader(), texture=texture)
+	material = Material(shader=quad_shader(), texture=canvas.texture)
 	geometry = QuadGeometry(projection_rect)
-	
-	return geometry, material
 
-def render(node, camera_frame, camera_frame_gray, camera, **kwargs):
-	global projection_corners_on_camera
+	def render(camera, camera_frame, camera_frame_gray, **kwargs):
+		global projection_corners_on_camera
+		
+		camera.render(geometry, material)
+		
+		chessboard_size = 6, 13
+		criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+		
+		ret, corners = cv.findChessboardCorners(camera_frame_gray, chessboard_size, None)
+		if ret:
+			corners = cv.cornerSubPix(camera_frame_gray, corners, (11, 11), (-1, -1), criteria)
+			
+			chessboard_width, chessboard_height = chessboard_size
+			
+			bl_height = corners[0][0][1] - corners[1][0][1]
+			bl_width = corners[chessboard_width][0][0] - corners[0][0][0]
+			bl = corners[0][0] + np.array([-2*bl_width, 2*bl_height])
+			
+			tl_height = corners[chessboard_width-2][0][1] - corners[chessboard_width-1][0][1]
+			tl_width = corners[2*chessboard_width-1][0][0] - corners[chessboard_width-1][0][0]
+			tl = corners[chessboard_width-1][0] + np.array([-2*tl_width, -2*tl_height])
+			
+			tr_height = corners[chessboard_width*chessboard_height-2][0][1] - corners[chessboard_width*chessboard_height-1][0][1]
+			tr_width = corners[chessboard_width*chessboard_height-1][0][0] - corners[chessboard_width*(chessboard_height-1)-1][0][0]
+			tr = corners[chessboard_width*chessboard_height-1][0] + np.array([2*tl_width, -2*tl_height])
+			
+			br_height = corners[chessboard_width*(chessboard_height-1)][0][1] - corners[chessboard_width*(chessboard_height-1)+1][0][1]
+			br_width = corners[chessboard_width*(chessboard_height-1)][0][0] - corners[chessboard_width*(chessboard_height-2)][0][0]
+			br = corners[chessboard_width*(chessboard_height-1)][0] + np.array([2*tl_width, 2*tl_height])
+			
+			projection_corners_on_camera = np.array([tl, tr, br, bl], dtype="float32")
+			
+			projection_corners_on_camera = cv.cornerSubPix(camera_frame_gray, projection_corners_on_camera, (11, 11), (-1, -1), criteria)
+			
+			camera_frame = draw_cv_polygon(camera_frame, projection_corners_on_camera)
+		
+		camera_frame = cv.drawChessboardCorners(camera_frame, chessboard_size, corners, ret)
+		cv.imshow("camera_frame", camera_frame)
 	
-	camera.render(*node)
-	
-	chessboard_size = 6, 13
-	criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-	
-	ret, corners = cv.findChessboardCorners(camera_frame_gray, chessboard_size, None)
-	if ret:
-		corners = cv.cornerSubPix(camera_frame_gray, corners, (11, 11), (-1, -1), criteria)
-		
-		chessboard_width, chessboard_height = chessboard_size
-		
-		bl_height = corners[0][0][1] - corners[1][0][1]
-		bl_width = corners[chessboard_width][0][0] - corners[0][0][0]
-		bl = corners[0][0] + np.array([-2*bl_width, 2*bl_height])
-		
-		tl_height = corners[chessboard_width-2][0][1] - corners[chessboard_width-1][0][1]
-		tl_width = corners[2*chessboard_width-1][0][0] - corners[chessboard_width-1][0][0]
-		tl = corners[chessboard_width-1][0] + np.array([-2*tl_width, -2*tl_height])
-		
-		tr_height = corners[chessboard_width*chessboard_height-2][0][1] - corners[chessboard_width*chessboard_height-1][0][1]
-		tr_width = corners[chessboard_width*chessboard_height-1][0][0] - corners[chessboard_width*(chessboard_height-1)-1][0][0]
-		tr = corners[chessboard_width*chessboard_height-1][0] + np.array([2*tl_width, -2*tl_height])
-		
-		br_height = corners[chessboard_width*(chessboard_height-1)][0][1] - corners[chessboard_width*(chessboard_height-1)+1][0][1]
-		br_width = corners[chessboard_width*(chessboard_height-1)][0][0] - corners[chessboard_width*(chessboard_height-2)][0][0]
-		br = corners[chessboard_width*(chessboard_height-1)][0] + np.array([2*tl_width, 2*tl_height])
-		
-		projection_corners_on_camera = np.array([tl, tr, br, bl], dtype="float32")
-		
-		projection_corners_on_camera = cv.cornerSubPix(camera_frame_gray, projection_corners_on_camera, (11, 11), (-1, -1), criteria)
-		
-		camera_frame = draw_cv_polygon(camera_frame, projection_corners_on_camera)
-	
-	camera_frame = cv.drawChessboardCorners(camera_frame, chessboard_size, corners, ret)
-	cv.imshow("camera_frame", camera_frame)
+	return render
 
 if __name__ == "__main__":
-	projection_main_loop(setup, render,
-		**main_loop_config_args(config))
+	run(calibration)
 	
-	if projection_corners_on_camera is not None:
-		np.savez("calibration.npz", projection_corners_on_camera=projection_corners_on_camera)
-		
-		print(projection_corners_on_camera)
-		print("calibration saved!")
+	#if projection_corners_on_camera is not None:
+	#	np.savez("calibration.npz", projection_corners_on_camera=projection_corners_on_camera)
+	#	
+	#	print(projection_corners_on_camera)
+	#	print("calibration saved!")
