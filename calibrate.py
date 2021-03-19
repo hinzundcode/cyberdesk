@@ -65,8 +65,8 @@ def calibration(projection_size, projection_rect, **kwargs):
 if __name__ == "__main__":
 	run(calibration)
 	
-	#if projection_corners_on_camera is not None:
-	#	np.savez("calibration.npz", projection_corners_on_camera=projection_corners_on_camera)
-	#	
-	#	print(projection_corners_on_camera)
-	#	print("calibration saved!")
+	if projection_corners_on_camera is not None:
+		np.savez("calibration.npz", projection_corners_on_camera=projection_corners_on_camera)
+		
+		print(projection_corners_on_camera)
+		print("calibration saved!")
