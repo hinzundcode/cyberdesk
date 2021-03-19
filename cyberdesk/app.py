@@ -76,9 +76,11 @@ def save_screenshot(frame):
 	print("took a screenshot! "+filename)
 
 class FPSCounter:
-	def __init__(self):
+	def __init__(self, window, window_title):
 		self.frame_count = 0
 		self.fps_timer = None
+		self.window = window
+		self.window_title = window_title
 	
 	def update(self, frame_start):
 		if self.fps_timer == None:
@@ -86,29 +88,57 @@ class FPSCounter:
 		
 		self.frame_count += 1
 		if frame_start > self.fps_timer:
-			print("fps:", self.frame_count)
+			if self.window.maximize:
+				print("fps:", self.frame_count)
+			else:
+				self.window.title = self.window_title + " - fps: " + str(self.frame_count)
+			
 			self.frame_count = 0
 			self.fps_timer = frame_start+1
 
 class Window:
-	def __init__(self, setup, size, title="Window", monitor=None, maximize=True, resizable=False):
+	first_window = None
+	
+	def __init__(self, setup, size, title="Window", monitor=None, maximize=False, resizable=False):
 		self.setup = setup
 		self.render = None
 		self.size = size
-		self.title = title
+		self._title = title
 		self.monitor = monitor
 		self.maximize = maximize
 		self.resizable = resizable or maximize
 		self.framebuffer_size = size
 		self.frame_before = None
-		self.fps_counter = FPSCounter()
+		self.fps_counter = FPSCounter(self, title)
+		self.window = None
+	
+	@property
+	def title(self):
+		return self._title
+	
+	@title.setter
+	def title(self, title):
+		self._title = title
+		
+		if self.window != None:
+			glfw.set_window_title(self.window, title)
 	
 	def show(self):
 		glfw.window_hint(glfw.RESIZABLE, self.resizable)
 		
-		self.window = glfw.create_window(*self.size, self.title, None, None)
+		self.window = glfw.create_window(*self.size, self._title, None, Window.first_window)
 		if not self.window:
 			raise Exception("can't create window")
+		
+		glfw.make_context_current(self.window)
+		
+		if Window.first_window == None:
+			print("Vendor:", glGetString(GL_VENDOR))
+			print("OpenGL Version:", glGetString(GL_VERSION))
+			print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
+			print("Renderer:", glGetString(GL_RENDERER))
+			
+			Window.first_window = self.window
 		
 		glfw.set_key_callback(self.window, self.on_key)
 		
@@ -119,13 +149,6 @@ class Window:
 			if moved and self.maximize:
 				self.wait_until_window_maximized = True
 		
-		glfw.make_context_current(self.window)
-		
-		print("Vendor:", glGetString(GL_VENDOR))
-		print("OpenGL Version:", glGetString(GL_VERSION))
-		print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION))
-		print("Renderer:", glGetString(GL_RENDERER))
-		
 		self.render = self.setup(window=self)
 	
 	def on_key(self, window, key, scancode, action, mods):
@@ -133,27 +156,33 @@ class Window:
 			glfw.set_window_should_close(self.window, True)
 	
 	def update(self):
+		if self.window == None:
+			return False
+		
 		if glfw.window_should_close(self.window):
+			self.hide()
 			return False
 		
 		if self.wait_until_window_maximized:
 			if try_maximize_window():
 				self.wait_until_window_maximized = False
 		
-		try:
-			# wait until window is open and maximized
-			if not self.wait_until_window_maximized:
-				self.framebuffer_size = glfw.get_framebuffer_size(self.window)
-				self.render_content()
-			
-			glfw.swap_buffers(self.window)
-			glfw.poll_events()
-		except KeyboardInterrupt:
-			glfw.set_window_should_close(self.window, True)
+		# wait until window is open and maximized
+		if not self.wait_until_window_maximized:
+			self.framebuffer_size = glfw.get_framebuffer_size(self.window)
+			self.render_content()
+		
+		glfw.swap_buffers(self.window)
 		
 		return True
 	
+	def hide(self):
+		glfw.destroy_window(self.window)
+		self.window = None
+	
 	def render_content(self):
+		glfw.make_context_current(self.window)
+		
 		frame_start = time.time()
 		delta_time = frame_start - self.frame_before if self.frame_before != None else 0
 		self.frame_before = frame_start
@@ -164,7 +193,7 @@ class Window:
 			delta_time=delta_time,
 			window=self)
 
-def run(window):
+def run(*windows):
 	if not glfw.init():
 		raise Exception("can't initialize glfw")
 	
@@ -179,10 +208,20 @@ def run(window):
 	glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 	glfw.window_hint(glfw.COCOA_RETINA_FRAMEBUFFER, False)
 	
-	window.show()
+	for window in windows:
+		window.show()
 	
-	while window.update():
-		pass
+	try:
+		windows_open = True
+		while windows_open:
+			windows_open = False
+			for window in windows:
+				windows_open |= window.update()
+			
+			glfw.poll_events()
+	except KeyboardInterrupt:
+		for window in windows:
+			glfw.set_window_should_close(window.window, True)
 	
 	glfw.terminate()
 
